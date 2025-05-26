@@ -1,0 +1,128 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  min-height: 100%;
+  margin: 0;
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+  background-color: #f7f7f7;
+  overflow-x: hidden; /* allow vertical scrolling only */
+}
+
+.form-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+form {
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.15);
+}
+
+.form-step {
+  display: none;
+  flex-direction: column;
+}
+
+.form-step.active {
+  display: flex;
+}
+
+label {
+  margin-top: 1.2rem;
+  font-weight: bold;
+  font-size: 1.05rem;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+button {
+  margin-top: 2rem;
+  background: #05721c;
+  color: white;
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #04ac28;
+}
+
+@media (max-width: 768px) {
+  form {
+    max-width: 90%;
+    padding: 2rem;
+  }
+}
+/* Container to align everything at the bottom */
+.client-letter-container {
+  margin-top: 2rem;
+  position: relative;
+}
+
+/* Checkbox label styling */
+.client-letter-label {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Checkbox itself */
+.client-letter-label input[type="checkbox"] {
+  margin-right: 0.5rem;
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Letter content styling */
+.client-letter-content {
+  display: none;
+  position: absolute;
+  bottom: 125%;
+  left: 0;
+  width: 100%;
+  background: #f9f9f9;
+  border-left: 4px solid #05721c;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #333;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+}
+
+/* Show letter on hover */
+.client-letter-container:hover .client-letter-content {
+  display: block;
+}
+
+/* Hide content if checkbox is ticked */
+.client-letter-label input[type="checkbox"]:checked ~ .client-letter-content {
+  display: none !important;
+}
+
+

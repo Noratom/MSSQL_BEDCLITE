@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointload Dashboard</title>
+    <link rel="stylesheet" href="stylec.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+    <style>
+         .top-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #115219, rgb(2, 174, 28));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .search-btn {
+            background-color:#03680a;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #03680a;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        #exportBtn {
+    background-color: #034d05;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #exportBtn:hover {
+    background-color:linear-gradient(135deg, #115219, rgb(2, 174, 28));
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Pointload Dashboard</h1>
+
+        <form class="search-container" onsubmit="handleSearch(event)">
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search Reg No, Name, or Date"
+            />
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+        
+        <div class="top-buttons">
+            <a href="Dashboard.html" class="status-btn">Home</a> <br><br>
+            <a href="PointloadA.html" class="status-btn">View Approved</a>
+            <a href="PointloadD.html" class="status-btn">View Declined</a>
+        </div>
+
+        <div class="table-container">
+            <table id="pointloadTable">
+                <thead>
+                    <tr>
+                        <th>Contractor Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Reg No</th>
+                        <th>Project Duration</th>
+                        <th>Name Of Project</th>
+                        <th>Location/Address Description</th>
+                        <th>Use of Premises</th>
+                        <th>Client Name</th>
+                        <th>Project Load Estimate</th>
+                        <th>Business Nature</th>
+                        <th>Administrative Fee</th>
+                        <th>clientLetterOfIntroduction</th>
+                        <th>BEDC Region</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data from JS will populate here -->
+                </tbody>
+            </table>
+        </div>
+        <button id="exportBtn">Download as Excel</button>
+    </div>
+
+    <script>
+
+    async function populateTableByStatus(data) {
+    const tableBody = document.querySelector('#pointloadTable tbody');
+    tableBody.innerHTML = ''; // Clear existing rows
+
+    function createRow(Pointload) {
+        const row = document.createElement('tr');
+        row.classList.add('clickable-row');
+        row.setAttribute('data-id', Pointload.CreatedAt);
+
+       row.innerHTML = `
+    <td>${Pointload.ContractorName}</td>
+    <td>${Pointload.ContractorEmail}</td>
+    <td>${Pointload.ClientPhoneNumber}</td>
+    <td>${Pointload.BEDCRegNo}</td>
+    <td>${Pointload.ProjectDurationEstimate}</td>
+    <td>${Pointload.NameOfProject}</td>
+    <td>${Pointload.RelocationAddressDescription}</td>
+    <td>${Pointload.PremisesUse}</td>
+    <td>${Pointload.ClientName}</td>
+    <td><a href="${Pointload.ProjectLoadEstimate || '#'}" target="_blank">View Project Load Estimate</a></td>
+    <td>${Pointload.NatureOfBusiness}</td>
+    <td><a href="${Pointload.AdminFeePaymentEvidence}" target="_blank">View Payment Evidence</a></td>
+    <td><a href="${Pointload.ClientLetterOfIntroduction}" target="_blank">View Client Letter</a></td>
+     <td>${Pointload.BEDCRegion}</td>
+    <td>${new Date(Pointload.CreatedAt).toLocaleString()}</td>
+`;
+
+        return row;
+    }
+    
+// Add rows grouped by status
+['pending', 'approved', 'declined'].forEach(status => {
+        const pointloads = data[status];
+
+        if (pointloads && pointloads.length > 0) {
+            // Inser a label row for each status group 
+            const labelRow = document.createElement('tr');
+            labelRow.innerHTML = `<td colspan="18" style="background-color: #f0f0f0; color: black; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)} Pointloads</td>`;
+            tableBody.appendChild(labelRow);
+           
+            pointloads.forEach(pointload => {
+                const row = createRow(pointload);
+                tableBody.appendChild(row);
+            });  
+    }
+});
+
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const CreatedAt = row.getAttribute('data-id');
+            window.location.href = `Pointload-details.html?submittedAt=${CreatedAt}`;
+        });
+    });
+}
+
+
+        async function fetchInitialPointloads() {
+            try {
+                const response = await fetch('http://localhost:4000/newdashboard/get_pointload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'pending' }) // Sending status in POST body
+                });
+                const pointloads = await response.json();
+                populateTableByStatus({ pending: pointloads, approved: [], declined: [] });
+            } catch (error) {
+                console.error('Error fetching pointload data:', error);
+            }
+        }
+
+        async function handleSearch(event) {
+            event.preventDefault();
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a search term.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:4000/newdashboard/pointloads_search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ searchTerm: query })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+
+                const results = await response.json();
+                populateTableByStatus(results);
+            } catch (error) {
+                console.error('Error searching pointload data:', error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchInitialPointloads);
+
+        //document.addEventListener("DOMContentLoaded", fetchAllPointloads);
+    function exportTableToExcel() {
+  // Correct table ID
+  var table = document.getElementById('pointloadTable');
+
+  // Convert table to workbook
+  var workbook = XLSX.utils.table_to_book(table, { sheet: "pointloads" });
+
+  // Download the workbook
+  XLSX.writeFile(workbook, 'Pointloadsheet_pending.xlsx');
+}
+
+    // Add event listener to the export button
+    document.getElementById('exportBtn').addEventListener('click', exportTableToExcel);
+            
+    </script>
+</body>
+</html>

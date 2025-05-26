@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BEDC Registration</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .error-message {
+      color: red;
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BEDC Registration</h1>
+    <form id="bedcForm">
+      <div class="form-group">
+        <label for="BEDCRegNo">BEDC Registration Number</label>
+        <input type="text" id="BEDCRegNo" name="BEDCRegNo" required />
+        <div id="errorMsg" class="error-message"></div> <!-- 🔥 Error shown here -->
+      </div><br>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('bedcForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const BEDCRegNo = document.getElementById('BEDCRegNo').value;
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = ''; // Clear old errors
+
+      try {
+        const response = await fetch('http://localhost:4000/contractor/regcheck', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ BEDCRegNo }),
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'ok') {
+          localStorage.setItem('contract', JSON.stringify(result.container));
+          window.location.href = 'Submitform.html';
+        } else {
+          errorMsg.textContent = result.msg || 'Invalid registration number.';
+        }
+      } catch (e) {
+        console.error(e);
+        errorMsg.textContent = 'An error occurred. Please try again later.';
+      }
+    });
+  </script>
+</body>
+</html>

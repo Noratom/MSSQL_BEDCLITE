@@ -1,0 +1,196 @@
+<!-- Save this as: contractor-form.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contractor Registration</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Contractor Registration Form</h1>
+    <form id="principalPersonsForm" enctype="multipart/form-data">
+      <div class="section active">
+        <h2>Company Information</h2>
+
+        <label for="contractorName">Company Name</label>
+        <input type="text" id="contractorName" name="contractorNameDisplay" readonly />
+        <input type="hidden" id="contractorNameHidden" name="contractorName" />
+
+        <label for="contractorAddress">Address</label>
+        <input type="text" id="contractorAddress" name="contractorAddressDisplay" readonly />
+        <input type="hidden" id="contractorAddressHidden" name="contractorAddress" />
+
+        <label for="phoneNo">Phone Number</label>
+        <input type="tel" id="phoneNo" name="phoneNoDisplay" readonly />
+        <input type="hidden" id="phoneNoHidden" name="phoneNo" />
+
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="emailDisplay" readonly />
+        <input type="hidden" id="emailHidden" name="email" />
+
+        <label for="bedcRegNo">BEDC Registration Number</label>
+        <input type="text" id="bedcRegNo" name="bedcRegNoDisplay" readonly />
+        <input type="hidden" id="bedcRegNoHidden" name="bedcRegNo" />
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 1</h2>
+
+        <label for="pPersonFName1">First Name</label>
+        <input type="text" id="pPersonFName1" name="pPersonFName1" required />
+
+        <label for="pPersonMName1">Middle Name</label>
+        <input type="text" id="pPersonMName1" name="pPersonMName1" required />
+
+        <label for="pPersonLName1">Last Name</label>
+        <input type="text" id="pPersonLName1" name="pPersonLName1" required />
+
+        <label for="pPersonPosition1">Position</label>
+        <input type="text" id="pPersonPosition1" name="pPersonPosition1" required />
+
+        <label for="pPersonPhoneNo1">Phone Number</label>
+        <input type="tel" id="pPersonPhoneNo1" name="pPersonPhoneNo1" required /> <br> <br>
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 2</h2>
+
+        <label for="pPersonFName2">First Name</label>
+        <input type="text" id="pPersonFName2" name="pPersonFName2" required />
+
+        <label for="pPersonMName2">Middle Name</label>
+        <input type="text" id="pPersonMName2" name="pPersonMName2" required />
+
+        <label for="pPersonLName2">Last Name</label>
+        <input type="text" id="pPersonLName2" name="pPersonLName2" required />
+
+        <label for="pPersonPosition2">Position</label>
+        <input type="text" id="pPersonPosition2" name="pPersonPosition2" required />
+
+        <label for="pPersonPhoneNo2">Phone Number</label>
+        <input type="tel" id="pPersonPhoneNo2" name="pPersonPhoneNo2" required /> <br> <br>
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Documents Upload</h2>
+
+        <label for="BEDCCertificate">BEDC Certificate</label>
+        <input type="file" id="BEDCCertificate" name="BEDCCertificate" accept="image/*" required />
+
+        <label for="ValidNEMSALicense">NEMSA/COREN Practicing License</label>
+        <input type="file" id="ValidNEMSALicense" name="ValidNEMSALicense" accept="image/*" required />
+
+        <label><input type="checkbox" name="vendorConsent" value="true" required /> I consent to verification.</label> <br>
+
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let container;
+    try {
+      container = JSON.parse(localStorage.getItem("contract"));
+      if (!container) throw new Error();
+    } catch (e) {
+      alert("No contractor data found. Please start from the beginning.");
+      window.location.href = "index.html";
+    }
+
+    // Populate visible and hidden fields
+    document.getElementById("contractorName").value = container.contractorName || "";
+    document.getElementById("contractorNameHidden").value = container.contractorName || "";
+
+    document.getElementById("contractorAddress").value = container.contractorAddress || "";
+    document.getElementById("contractorAddressHidden").value = container.contractorAddress || "";
+
+    document.getElementById("phoneNo").value = container.PhoneNo || "";
+    document.getElementById("phoneNoHidden").value = container.PhoneNo || "";
+
+    document.getElementById("email").value = container.contractorEmail || "";
+    document.getElementById("emailHidden").value = container.contractorEmail || "";
+
+    document.getElementById("bedcRegNo").value = container.BEDCRegNumber || "";
+    document.getElementById("bedcRegNoHidden").value = container.BEDCRegNumber || "";
+
+    const sections = document.querySelectorAll(".section");
+    let currentStep = 0;
+
+    function showStep(index) {
+      sections.forEach((sec, i) => {
+        sec.classList.toggle("active", i === index);
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < sections.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function validateSection(section) {
+      const inputs = section.querySelectorAll("input[required]");
+      for (let input of inputs) {
+        if (input.type === "file" && input.files.length === 0) {
+          alert("Please upload all required documents.");
+          return false;
+        } else if (input.type !== "file" && input.type !== "checkbox" && input.value.trim() === "") {
+          alert("Please fill out all required fields.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showStep(currentStep);
+
+      document.querySelectorAll(".next-btn").forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          if (validateSection(sections[i])) {
+            nextStep();
+          }
+        });
+      });
+
+      document.getElementById("principalPersonsForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const lastSection = sections[sections.length - 1];
+        if (validateSection(lastSection)) {
+          const formData = new FormData(this);
+
+          formData.set("contractorName", document.getElementById("contractorNameHidden").value);
+          formData.set("contractorAddress", document.getElementById("contractorAddressHidden").value);
+          formData.set("phoneNo", document.getElementById("phoneNoHidden").value);
+          formData.set("email", document.getElementById("emailHidden").value);
+          formData.set("bedcRegNo", document.getElementById("bedcRegNoHidden").value);
+
+          fetch("http://localhost:4000/newform/submitContractor", {
+            method: "POST",
+            body: formData
+          })
+            .then(res => res.json())
+            .then(data => {
+              alert("Submission successful!");
+              window.location.href = "network-construction.html";
+            })
+            .catch(err => {
+              console.error(err);
+              alert("There was an error submitting the form.");
+            });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

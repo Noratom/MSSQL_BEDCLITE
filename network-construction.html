@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Application for Network Construction</title>
+  <link rel="stylesheet" href="link.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1>Application for Network Construction</h1>
+
+    <div class="taskbar">
+      <button onclick="loadForm('pointLoad')">Point Load Installation</button>
+      <button onclick="loadForm('publicSubstance')">Public Substation</button>
+      <button onclick="loadForm('networkRelocation')">Line Works</button>
+    </div>
+
+    <div id="formContainer" class="form-viewer">
+      <p>Select an application form above and fill the form properly.</p>
+    </div>
+  </div>
+
+  <script>
+    function loadForm(formType) {
+      const formContainer = document.getElementById('formContainer');
+      formContainer.innerHTML = '';
+
+      let formHTML = '';
+
+      switch (formType) {
+        case 'pointLoad':
+          formHTML = '<object type="text/html" data="point-load-form.html" class="form-iframe"></object>';
+          break;
+        case 'publicSubstance':
+          formHTML = '<object type="text/html" data="public-substance-form.html" class="form-iframe"></object>';
+          break;
+        case 'networkRelocation':
+          formHTML = '<object type="text/html" data="network-relocation-form.html" class="form-iframe"></object>';
+          break;
+      }
+
+      formContainer.innerHTML = formHTML;
+    }
+  </script>
+
+</body>
+</html>

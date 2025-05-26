@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointload Dashboard</title>
+    <link rel="stylesheet" href="stylec.css">
+    <style>
+
+        .top-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #115219, rgb(2, 174, 28));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .search-btn {
+            background-color:#03680a;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #03680a;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Pointload Dashboard Approved</h1>
+
+        <form class="search-container" onsubmit="handleSearch(event)">
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search Reg No, Name, or Date"
+            />
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+
+        <div class="top-buttons">
+            <a href="Dashboard.html" class="status-btn">Home</a> <br><br>
+            <a href="Pointload.html" class="status-btn">View Pending</a>
+            <a href="PointloadD.html" class="status-btn">View Declined</a>
+        </div>
+
+        <div class="table-container">
+            <table id="pointloadTable">
+                <thead>
+                    <tr>
+                        <th>Contractor Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Reg No</th>
+                        <th>Project Duration</th>
+                        <th>Relocation Address</th>
+                        <th>Letter of Undertaking</th>
+                        <th>Single Line Drawing</th>
+                        <th>Premises Use</th>
+                        <th>Client Name</th>
+                        <th>Client Address</th>
+                        <th>Project Load Estimate</th>
+                        <th>Business Nature</th>
+                        <th>Admin Fee Evidence</th>
+                        <th>Customer Premises Image</th>
+                        <th>BEDC Region</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Data from JS will populate here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                const response = await fetch('http://localhost:4000/dashboard/get_pointloadA',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'approved' }) // Sending status in POST body
+            });
+            
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                const pointloads = await response.json();
+                const tableBody = document.querySelector('#pointloadTable tbody');
+
+                pointloads.forEach(pointload => {
+                    const row = document.createElement('tr');
+                    row.classList.add('clickable-row');
+                    row.setAttribute('data-id', pointload.submittedAt); // Assuming BEDCRegNo is unique for each pointload
+                    // Add the pointload ID to the row for later use
+                    row.innerHTML = `
+                        <tr>
+                            <td>${pointload.contractorsName}</td>
+                            <td>${pointload.contractorEmail}</td>
+                            <td>${pointload.contractorPhoneNumber}</td>
+                            <td>${pointload.ContractorAddress}</td>
+                            <td>${pointload.BEDCRegNo}</td>
+                            <td>${pointload.projectDurationEstimate}</td>
+                            <td>${pointload.RelocationAddressDescription}</td>
+                            <td><a href="${pointload.clientLetterOfIntroductionAndUndertaking}" target="_blank">View Letter</a></td>
+                            <td><a href="${pointload.SingleLineDrawing}" target="_blank">View Drawing</a></td>
+                            <td>${pointload.PremisesUse}</td>
+                            <td>${pointload.clientName}</td>
+                            <td>${pointload.clientAddress}</td>
+                            <td>${pointload.projectLoadEstimate}</td>
+                            <td>${pointload.businessNature}</td>
+                            <td><a href="${pointload.adminFeePaymentEvidence}" target="_blank">View Payment Evidence</a></td>
+                            <td><a href="${pointload.customerPremisesImage}" target="_blank">View Premises Image</a></td>
+                            <td>${pointload.BEDCRegion}</td>
+                            <td>${new Date(pointload.submittedAt).toLocaleString()}</td>
+                        </tr>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Add click event to each row to redirect with the contractor ID
+                document.querySelectorAll('.clickable-row').forEach(row => {
+                    row.addEventListener('click', () => {
+                        const submittedAt = row.getAttribute('data-id');
+                        window.location.href = Pointload-details.html?submittedAt=${submittedAt}; // Redirect to details page with pointload ID as query parameter
+                    });
+                });
+            } catch (error) {
+                console.error('Error fetching pointload data:', error);
+            }
+        });
+    </script>
+</body>
+</html>

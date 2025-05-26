@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contractor Details</title>
+  <link rel="stylesheet" href="stylecd.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Contractor Details</h1>
+
+    <form id="contractorDetailsForm">
+      <div class="section">
+        <h2>Company Information</h2>
+        <label for="contractorsName">Company Name</label>
+        <input type="text" id="contractorsName" readonly />
+
+        <label for="contractorEmail">Email Address</label>
+        <input type="email" id="contractorEmail" readonly />
+
+        <label for="PhoneNo">Phone Number</label>
+        <input type="text" id="PhoneNo" readonly />
+
+        <label for="ContractorAddress">Address</label>
+        <input type="text" id="ContractorAddress" readonly />
+
+        <label for="BEDCRegNo">BEDC Registration Number</label>
+        <input type="text" id="BEDCRegNo" readonly />
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 1</h2>
+        <label for="PPersonFName1">Full Name</label>
+        <input type="text" id="PPersonFName1" readonly />
+
+        <label for="PPersonPhoneNo1">Phone Number</label>
+        <input type="tel" id="PPersonPhoneNo1" readonly />
+
+        <label for="PPersonPosition1">Position</label>
+        <input type="text" id="PPersonPosition1" readonly />
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 2</h2>
+        <label for="PPersonFName2">Full Name</label>
+        <input type="text" id="PPersonFName2" readonly />
+
+        <label for="PPersonPhoneNo2">Phone Number</label>
+        <input type="tel" id="PPersonPhoneNo2" readonly />
+
+        <label for="PPersonPosition2">Position</label>
+        <input type="text" id="PPersonPosition2" readonly />
+      </div>
+
+      <div class="section">
+        <h2>Uploaded Documents</h2>
+        <p><a href="#" id="BEDCCerticateLink" target="_blank">View BEDC Certificate</a></p>
+        <p><a href="#" id="ValidNEMSALicenseLink" target="_blank">View NEMSA License</a></p>
+      </div>
+    </form>
+
+    <div class="section">
+      <h2>Action</h2>
+      <button type="button" onclick="handleStatus('approved')">Approve</button>
+      <button type="button" onclick="handleStatus('declined')">Decline</button>
+
+      <div id="DeclineReasonContainer" style="display: none; margin-top: 10px;">
+        <label for="DeclineReason">Reason for Decline:</label>
+        <textarea id="DeclineReason" rows="4" cols="50" placeholder="Enter reason..."></textarea>
+        <button type="button" onclick="submitDecline()">Submit Decline</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', fetchContractorDetails);
+
+    async function fetchContractorDetails() {
+      const params = new URLSearchParams(window.location.search);
+      const BEDCRegNo = params.get('BEDCRegNo');
+
+      if (BEDCRegNo) {
+        try {
+          const response = await fetch('http://localhost:4000/newdashboard/get_contractor/one', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ BEDCRegNo })
+          });
+
+          if (!response.ok) throw new Error('Failed to fetch contractor');
+
+          const contractor = await response.json();
+
+          document.getElementById('contractorsName').value = contractor.ContractorName;
+          document.getElementById('contractorEmail').value = contractor.Email;
+          document.getElementById('PhoneNo').value = contractor.PhoneNo;
+          document.getElementById('ContractorAddress').value = contractor.ContractorAddress;
+          document.getElementById('BEDCRegNo').value = contractor.BEDCRegNo;
+
+          document.getElementById('PPersonFName1').value = `${contractor.PPersonFName1} ${contractor.PPersonMName1} ${contractor.PPersonLName1}`;
+          document.getElementById('PPersonPhoneNo1').value = contractor.PPersonPhoneNo1;
+          document.getElementById('PPersonPosition1').value = contractor.PPersonPosition1;
+
+          document.getElementById('PPersonFName2').value = `${contractor.PPersonFName2} ${contractor.PPersonMName2} ${contractor.PPersonLName2}`;
+          document.getElementById('PPersonPhoneNo2').value = contractor.PPersonPhoneNo2;
+          document.getElementById('PPersonPosition2').value = contractor.PPersonPosition2;
+
+          await loadContractorImages(contractor);
+        } catch (error) {
+          console.error('Error fetching contractor details:', error);
+        }
+      }
+    }
+
+    async function fetchDocumentBlobUrl(type, BEDCRegNo) {
+      try {
+        const response = await fetch('http://localhost:4000/newdashboard/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type, BEDCRegNo })
+        });
+
+        if (!response.ok) throw new Error(`Failed to fetch ${type}`);
+
+        const blob = await response.blob();
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    }
+
+    async function loadContractorImages(contractor) {
+      const bedcUrl = await fetchDocumentBlobUrl("BEDCCerticate", contractor.BEDCRegNo);
+      const nemsaUrl = await fetchDocumentBlobUrl("ValidNEMSALicense", contractor.BEDCRegNo);
+
+      const bedcLink = document.getElementById("BEDCCerticateLink");
+      const nemsaLink = document.getElementById("ValidNEMSALicenseLink");
+
+      if (bedcUrl) {
+        bedcLink.href = bedcUrl;
+      } else {
+        bedcLink.textContent = "BEDC Certificate not available";
+        bedcLink.removeAttribute("href");
+      }
+
+      if (nemsaUrl) {
+        nemsaLink.href = nemsaUrl;
+      } else {
+        nemsaLink.textContent = "NEMSA License not available";
+        nemsaLink.removeAttribute("href");
+      }
+    }
+
+    async function handleStatus(status) {
+      if (status === 'declined') {
+        document.getElementById('DeclineReasonContainer').style.display = 'block';
+        return;
+      }
+      await submitStatusUpdate(status);
+    }
+
+    async function submitDecline() {
+      const reason = document.getElementById('DeclineReason').value.trim();
+      if (!reason) {
+        alert("Please provide a reason for declining.");
+        return;
+      }
+      await submitStatusUpdate('declined', reason);
+    }
+
+    async function submitStatusUpdate(status, reason = '') {
+      const BEDCRegNo = document.getElementById('BEDCRegNo').value;
+      if (!BEDCRegNo) {
+        alert("BEDCRegNo is missing.");
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:4000/newdashboard/contractor/update-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ BEDCRegNo, status, reason })
+        });
+
+        if (!response.ok) throw new Error(await response.text());
+        const result = await response.json();
+        alert(`Contractor has been ${status} successfully.`);
+        window.location.href = 'contractorkyc.html';
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert('An error occurred while updating status.');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Network Dashboard Pending</title>
+  <link rel="stylesheet" href="stylec.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+
+  <style>
+    .top-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .status-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #115219, rgb(2, 174, 28));
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      text-decoration: none;
+    }
+
+    .status-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .search-input {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .search-btn {
+      background-color:#03680a;
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 90%;
+      margin: 0 auto;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+
+    th {
+      background-color: #03680a;
+      color: white;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+      cursor: pointer;
+    }
+    #exportBtn {
+    background-color: #034d05;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #exportBtn:hover {
+    background-color:linear-gradient(135deg, #115219, rgb(2, 174, 28));
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="title">Line works Dashboard Pending</h1>
+
+    <form class="search-container" id="searchForm">
+      <input
+        type="text"
+        id="searchInput"
+        class="search-input"
+        placeholder="Search Reg No, Name, or Date"
+      />
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <div class="top-buttons">
+      <a href="Dashboard.html" class="status-btn">Home</a>
+      <a href="NetworkA.html" class="status-btn">View Approved</a>
+      <a href="NetworkD.html" class="status-btn">View Declined</a>
+    </div>
+
+    <div class="table-container">
+      <table id="networkTable">
+        <thead>
+          <tr>
+            <th>Company Name</th>
+            <th>Email</th>
+            <th>Proposed Span Of Extention </th>
+            <th>Voltage Level (kVA) </th>
+            <th>Reg No</th>
+            <th>Estimated Project Duration</th>
+            <th>Project Relocation Address</th>
+            <th>BEDC Region</th>
+            <th>Submitted At</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data from JS will populate here -->
+        </tbody>
+      </table>
+    </div>
+    <button id="exportBtn">Download as Excel</button>
+  </div>
+
+  <script>
+    async function populateTableByStatus(data) {
+      const tableBody = document.querySelector('#networkTable tbody');
+      tableBody.innerHTML = '';
+
+      function createRow(network) {
+  const row = document.createElement('tr');
+  row.classList.add('clickable-row');
+  row.setAttribute('data-id', network.createdAt);  // updated from submittedAt
+
+  row.innerHTML = `
+    <td>${network.contractorName}</td>
+    <td>${network.contractorEmail}</td>
+    <td>${network.proposedSpanOfExtention}</td>
+    <td>${network.voltageLevelOfNetwork}</td>
+    <td>${network.BEDCRegNo}</td>
+    <td>${network.projectDurationEstimate}</td>
+    <td>${network.RelocationAddressDescription}</td>
+    <td>${network.BEDCRegion}</td>
+    <td>${new Date(network.createdAt).toLocaleString()}</td>
+  `;
+  return row;
+}
+
+
+      ['pending', 'approved', 'declined'].forEach(status => {
+        const networks = data[status];
+
+        if (networks && networks.length > 0) {
+          const headerRow = document.createElement('tr');
+          headerRow.innerHTML = `<td colspan="11" style="background-color: #f0f0f0; color: black; font-weight: bold;">${status.charAt(0).toUpperCase() + status.slice(1)} Network</td>`;
+          tableBody.appendChild(headerRow);
+
+          networks.forEach(network => {
+            const row = createRow(network);
+            tableBody.appendChild(row);
+          });
+        }
+      });
+
+      document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', () => {
+          const createdAt = row.getAttribute('data-id');
+          window.location.href = `Network-details.html?submittedAt=${createdAt}`;
+        });
+      });
+    }
+
+    async function fetchInitialNetworks() {
+      try {
+        const response = await fetch('http://localhost:4000/newdashboard/get_linework', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'pending' })
+        });
+
+        const data = await response.json();
+        populateTableByStatus({ pending: data, approved: [], declined: [] });
+      } catch (error) {
+        console.error('Error fetching network data:', error);
+      }
+    }
+
+    async function handleSearch(event) {
+      event.preventDefault();
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) {
+        alert('Please enter a search term.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:4000/newdashboard/lineworks_search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ searchTerm: query })
+        });
+
+        const data = await response.json();
+        populateTableByStatus(data);
+      } catch (error) {
+        console.error('Error searching network data:', error);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchInitialNetworks();
+      document.querySelector('#searchForm').addEventListener('submit', handleSearch);
+    });
+   
+    document.addEventListener("DOMContentLoaded", fetchInitialNetworks);
+    function exportTableToExcel() {
+  // Correct table ID
+  var table = document.getElementById('networkTable');
+
+  // Convert table to workbook
+  var workbook = XLSX.utils.table_to_book(table, { sheet: "networks" });
+
+  // Download the workbook
+  XLSX.writeFile(workbook, 'Networksheet_pending.xlsx');
+}
+
+    // Add event listener to the export button
+    document.getElementById('exportBtn').addEventListener('click', exportTableToExcel);
+  </script>
+</body>
+</html>

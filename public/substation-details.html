@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Substation Details</title>
+    <link rel="stylesheet" href="stylecd.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Substation Details</h1>
+
+        <form id="substationDetailsForm">
+            <div class="section">
+                <h2>Company Information</h2>
+                <label for="contractorsName">Company Name</label>
+                <input type="text" id="contractorsName" readonly>
+
+                <label for="contractorEmail">Email Address</label>
+                <input type="email" id="contractorEmail" readonly>
+
+                <label for="BEDCRegNo">BEDC Registration Number</label>
+                <input type="text" id="BEDCRegNo" readonly>
+
+                <label for="voltageLevelOfSubstation">Voltage Level</label>
+                <input type="text" id="voltageLevelOfSubstation" readonly>
+
+                <label for = "proposedSpanOfSubstation">Proposed Span of Substation</label>
+                <input type="text" id="proposedSpanOfSubstation" readonly>
+
+                <label for="SubstationName"> Substation Name</label>
+                <input type="text" id="SubstationName" readonly>
+
+                <label for="SubstationLocation">Substation Location</label>
+                <input type="text" id="SubstationLocation" readonly>
+
+                <label for="BEDCRegion"> BEDC Region</label>
+                <input type="text" id="BEDCRegion" readonly>
+            </div>
+
+            <div class="section">
+                <h2>Uploaded Documents</h2>
+                <p><a id="AdminFeePaymentEvidence" target="_blank">View Evidence of Payment</a></p>
+                <p><a id="LetterOfDonation" target="_blank">View Letter of Donation</a></p>
+            </div>
+
+            <div class="section">
+                <h2>Submission Details</h2>
+
+                <label for="submittedAt">Submitted At</label>
+                <input type="text" id="submittedAt" readonly>
+            </div>
+        </form>
+
+        <div class="section">
+            <h2>Action</h2>
+            <button type="button" onclick="handleStatus('approved')">Approve</button>
+            <button type="button" onclick="handleStatus('declined')">Decline</button>
+   
+            <div id="DeclineReasonContainer" style="display: none; margin-top: 10px;">
+        <label for="DeclineReason">Reason for Decline:</label>
+        <textarea id="DeclineReason" rows="4" cols="50" placeholder="Enter reason..."></textarea>
+        <button type="button" onclick="submitDecline()">Submit Decline</button>
+    </div>
+</div>
+
+        </div>
+        
+    </div>
+
+    <script>
+      async function fetchDocumentBlobUrl(type, CreatedAt) {
+  try {
+    const response = await fetch('http://localhost:4000/newdashboard/downloadsubstations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, CreatedAt }),
+    });
+
+    if (!response.ok) throw new Error(`Failed to fetch ${type}`);
+
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error('Error fetching document:', error);
+    return null;
+  }
+}
+
+async function fetchSubstationDetails() {
+  const params = new URLSearchParams(window.location.search);
+  const CreatedAt = params.get('submittedAt'); 
+
+  if (CreatedAt) {
+    try {
+      const response = await fetch(`http://localhost:4000/newdashboard/get_substation/one`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ CreatedAt })
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok ' + response.statusText);
+
+      const substation = await response.json();
+
+      document.getElementById('contractorsName').value = substation.contractorName;
+      document.getElementById('contractorEmail').value = substation.contractorEmail;
+      document.getElementById('BEDCRegNo').value = substation.BEDCRegNo;
+      document.getElementById('SubstationName').value = substation.SubstationName;
+      document.getElementById('SubstationLocation').value = substation.SubstationLocation;
+      document.getElementById('voltageLevelOfSubstation').value = substation.voltageLevelOfSubstation;
+      document.getElementById('proposedSpanOfSubstation').value = substation.proposedSpanOfSubstation;
+      document.getElementById('BEDCRegion').value = substation.BEDCRegion;
+      document.getElementById('submittedAt').value = new Date(substation.createdAt).toLocaleString();
+
+      // Load documents as blob URLs:
+      const adminFeeUrl = await fetchDocumentBlobUrl('AdminFeePaymentEvidence', substation.createdAt);
+      if (adminFeeUrl) {
+        const adminFeeLink = document.getElementById('AdminFeePaymentEvidence');
+        adminFeeLink.href = adminFeeUrl;
+        adminFeeLink.style.display = 'inline';
+      } else {
+        document.getElementById('AdminFeePaymentEvidence').style.display = 'none';
+      }
+
+      const letterDonationUrl = await fetchDocumentBlobUrl('LetterOfDonation', substation.createdAt);
+      if (letterDonationUrl) {
+        const letterDonationLink = document.getElementById('LetterOfDonation');
+        letterDonationLink.href = letterDonationUrl;
+        letterDonationLink.style.display = 'inline';
+      } else {
+        document.getElementById('LetterOfDonation').style.display = 'none';
+      }
+
+    } catch (error) {
+      console.error('Error fetching substation details:', error);
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchSubstationDetails);
+
+       async function handleStatus(status) {
+        if (status === 'declined') {
+            document.getElementById('DeclineReasonContainer').style.display = 'block';
+            return;
+        }
+
+        await submitStatusUpdate(status);
+    }
+
+    async function submitDecline() {
+        const reason = document.getElementById('DeclineReason').value.trim();
+        if (!reason) {
+            alert("Please provide a reason for declining.");
+            return;
+        }
+
+        await submitStatusUpdate('declined', reason);
+    }
+
+    async function submitStatusUpdate(status, reason = '') {
+        const BEDCRegNo = document.getElementById('BEDCRegNo').value;
+
+        if (!BEDCRegNo) {
+            alert("BEDCRegNo is missing.");
+            return;
+        }
+
+    try {
+        const response = await fetch('http://localhost:4000/newdashboard/substation/update-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ BEDCRegNo, status })
+        });
+
+        if (!response.ok) {
+            const errMessage = await response.text();
+            throw new Error(errMessage || 'Failed to update status.');
+        }
+
+        const result = await response.json();
+        alert(`Substation application has been ${status} successfully. Email notification sent.`);
+        window.location.href = 'substation.html'; // Redirect to the substation list page after updating status
+        // Optionally, you can log the result or handle it as needed
+        console.log(result);
+    } catch (error) {
+        console.error('Error updating status:', error);
+        alert('An error occurred while updating status.');
+    }
+}
+
+        document.addEventListener('DOMContentLoaded', fetchSubstationDetails);
+    </script>
+</body>
+</html>

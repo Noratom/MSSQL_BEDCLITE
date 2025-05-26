@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Network Relocation Form</title>
+  <link rel="stylesheet" href="test.css" />
+</head>
+<body>
+
+  <div class="form-wrapper">
+    <form id="network-relocation-form" enctype="multipart/form-data">
+      <h1>Line Works Form</h1>
+
+      <!-- Step 1: Line Works Details -->
+      <div class="form-step active">
+        <h2>Line Works Details</h2>
+
+        <label for="contractorsName">Company Name</label>
+        <input type="text" id="contractorName" name="contractorName" readonly>
+
+        <label for="contractorEmail">Email Address</label>
+        <input type="email" id="contractorEmail" name="contractorEmail" readonly>
+
+        <label for="BEDCRegNo">BEDC Registration Number</label>
+        <input type="text" id="BEDCRegNo" name="BEDCRegNo" readonly>
+        
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <!-- Step 2: Network Details -->
+      <div class="form-step">
+        <label for="proposedSpanOfExtention">Proposed Span (km)</label>
+        <input type="text" id="proposedSpanOfExtention" name="proposedSpanOfExtention" required>
+
+        <label for="voltageLevelOfNetwork">Voltage Level (kVA)</label>
+        <input type="text" id="voltageLevelOfNetwork" name="voltageLevelOfNetwork">
+
+        <label for="projectDurationEstimate">Estimated Project Duration</label>
+        <input type="text" id="projectDurationEstimate" name="projectDurationEstimate" required>
+
+        <label for="RelocationAddressDescription">Project Address Description</label>
+        <input type="text" id="RelocationAddressDescription" name="RelocationAddressDescription">
+
+        <label for="BEDCRegion">Region</label>
+        <select id="BEDCRegion" name="BEDCRegion">
+          <option value="Benin North">Benin North</option>
+          <option value="Benin South">Benin South</option>
+          <option value="Auchi/Uromi">Auchi/Uromi</option>
+          <option value="Sapele">Sapele</option>
+          <option value="Asaba">Asaba</option>
+          <option value="Akure">Akure</option>
+          <option value="Ekiti">Ekiti</option>
+          <option value="Ondo">Ondo</option>
+          <option value="Warri">Warri</option>
+        </select>
+        
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <!-- Step 3: Upload Documents -->
+      <div class="form-step">
+        <h2>Upload Documents</h2>
+
+        <label>
+          <input type="checkbox" id="clientLetterOfIntroductionAndUndertaking" name="clientLetterOfIntroductionAndUndertaking" required />
+          I agree to the Client Letter of Undertaking shown below
+        </label>
+<div id="clientLetterContent" style="display: none; margin-top: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
+  <strong>Client Letter of Undertaking:</strong>
+  <p style="white-space: pre-line; margin-top: 0.5rem;">
+    I hereby undertake as follows:
+
+    1. That I am the lawful occupant/responsible party of the premises located at the provided address.
+    2. That I am requesting electricity supply from the Benin Electricity Distribution Company (BEDC) to the above-mentioned address.
+    3. That I shall ensure the electricity connection is used strictly for the approved purpose (e.g., residential, commercial, industrial).
+    4. That I shall be fully responsible for the payment of electricity bills and any other charges as may be determined by BEDC from time to time.
+    5. That I shall not engage in, nor allow any form of illegal connection, meter bypass, or tampering with BEDC equipment.
+    6. That I shall allow authorized BEDC personnel access to the premises for meter reading, inspection, or maintenance as required.
+    7. That I shall promptly notify BEDC of any fault, damage, or suspicious activity relating to the electricity supply at the premises.
+    8. That I understand any breach of this undertaking or BEDC’s regulations may result in disconnection and legal actions as deemed appropriate.
+
+    This undertaking is made in good faith and with full knowledge of the responsibilities and consequences.
+  </p>
+</div>
+
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+ const steps = document.querySelectorAll(".form-step");
+    const nextBtns = document.querySelectorAll(".next-btn");
+
+    nextBtns.forEach((btn, index) => {
+      btn.addEventListener("click", () => {
+        if (steps[index].querySelectorAll("input:invalid, select:invalid").length === 0) {
+          steps[index].classList.remove("active");
+          steps[index + 1].classList.add("active");
+        } else {
+          alert("Please fill all required fields.");
+        }
+      });
+    });
+
+// Toggle Client Letter of Introduction
+    const toggleClientLetter = document.getElementById("clientLetterOfIntroductionAndUndertaking");
+    const clientLetterContent = document.getElementById("clientLetterContent");
+
+    toggleClientLetter.addEventListener("change", function () {
+      clientLetterContent.style.display = this.checked ? "block" : "none";
+    });
+
+
+   // Autofill
+   const stored = localStorage.getItem("contract");
+    if (stored) {
+      const container = JSON.parse(stored);
+      document.getElementById("contractorName").value = container.contractorName || "";
+      document.getElementById("contractorEmail").value = container.contractorEmail || "";
+      document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
+    } else {
+      alert("No contractor data found. Please start from the beginning.");
+      window.location.href = "index.html";
+    }
+
+    //submit form
+    document.getElementById("network-relocation-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      try{
+        const response = await fetch("http://localhost:4000/newform/lineWorks", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await response.json();
+        if (response.ok){
+          alert('Form submitted successfully!');
+          localStorage.removeItem("contract");
+          window.location.href = "success.html";
+        } else {
+          alert("submission failed: " + data.msg);
+        }
+      } catch (err) {
+        console.error(err)
+        alert("An error occurred while submitting the form");
+      }
+    });
+
+  </script>
+
+ 
+</body>
+</html>

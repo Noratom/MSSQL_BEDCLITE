@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up | Contractor KYC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            background: #e8f0fe;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            justify-content: center;
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 0.4rem 0 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #218838;
+        }
+
+        .link {
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .link a {
+            color: #28a745;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Sign Up</h2>
+        <form action="/signup" method="POST">
+            <input type="text" name="firstName" placeholder="First Name" required>
+            <input type="text" name="lastName" placeholder="Last Name" required>
+            <input type="text" name="otherName" placeholder="Other Name (Optional)">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="tel" name="phoneNumber" placeholder="Phone Number" required>
+            <input type="text" name="region" placeholder="Region" required>
+            <input type="text" name="bu" placeholder="Business Unit" required>
+            <input type="text" name="role" placeholder="Role in Organization" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div class="link">
+            Already have an account? <a href="login.html">Log in</a>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', async function (e) {
+            e.preventDefault(); // prevent form from submitting the default way
+        
+            const formData = new FormData(this);
+        
+            const data = {
+                firstName: formData.get('firstName'),
+                lastName: formData.get('lastName'),
+                otherName: formData.get('otherName'),
+                username: formData.get('username'),
+                email: formData.get('email'),
+                phoneNumber: formData.get('phoneNumber'),
+                region: formData.get('region'),
+                bu: formData.get('bu'),
+                role: formData.get('role'),
+                password: formData.get('password'),
+                confirmPassword: formData.get('confirmPassword')
+            };
+        
+            try {
+                const response = await fetch('http://localhost:4000/admin/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+        
+                const result = await response.json();
+        
+                if (response.ok) {
+                    alert('Admin signup successful!');
+                    console.log(result); // You could redirect or store token here
+                    window.location.href = 'Dashboard.html'; // optional redirect
+                } else {
+                    alert(`Signup failed: ${result.msg}`);
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Something went wrong. Please try again later.');
+            }
+        });
+        </script>
+
+
+</body>
+</html>

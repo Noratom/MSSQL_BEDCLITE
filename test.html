@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contractor Registration</title>
+  <link rel="stylesheet" href="test.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Contractor Registration Form</h1>
+    <form id="principalPersonsForm" enctype="multipart/form-data">
+      <div class="section active">
+        <h2>Company Information</h2>
+        <label for="contractorsName">Company Name</label>
+        <input type="text" id="contractorsName" name="contractorsName" readonly>
+
+        <label for="ContractorAddress">Address</label>
+        <input type="text" id="ContractorAddress" name="ContractorAddress" readonly>
+
+        <label for="contractorPhoneNumber">Phone Number</label>
+        <input type="tel" id="contractorPhoneNumber" name="contractorPhoneNumber" readonly>
+
+        <label for="contractorEmail">Email Address</label>
+        <input type="email" id="contractorEmail" name="contractorEmail" readonly>
+
+        <label for="BEDCRegNo">BEDC Registration Number</label>
+        <input type="text" id="BEDCRegNo" name="BEDCRegNo" readonly>
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 1</h2>
+        <label for="PPersonFName1">First Name</label>
+        <input type="text" id="PPersonFName1" name="PPersonFName1" required>
+
+        <label for="PPersonMName1">Middle Name</label>
+        <input type="text" id="PPersonMName1" name="PPersonMName1" required>
+
+        <label for="PPersonLName1">Last Name</label>
+        <input type="text" id="PPersonLName1" name="PPersonLName1" required>
+
+        <label for="PPersonPosition1">Position</label>
+        <input type="text" id="PPersonPosition1" name="PPersonPosition1" required>
+
+        <label for="PPersonPhoneNo1">Phone Number</label>
+        <input type="tel" id="PPersonPhoneNo1" name="PPersonPhoneNo1" required>
+
+        <label for="PPersonSampleSignature1">Sample Signature</label>
+        <input type="file" id="PPersonSampleSignature1" name="PPersonSampleSignature1" accept="image/*" required>
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Principal Person 2</h2>
+        <label for="PPersonFName2">First Name</label>
+        <input type="text" id="PPersonFName2" name="PPersonFName2" required>
+
+        <label for="PPersonMName2">Middle Name</label>
+        <input type="text" id="PPersonMName2" name="PPersonMName2" required>
+
+        <label for="PPersonLName2">Last Name</label>
+        <input type="text" id="PPersonLName2" name="PPersonLName2" required>
+
+        <label for="PPersonPosition2">Position</label>
+        <input type="text" id="PPersonPosition2" name="PPersonPosition2" required>
+
+        <label for="PPersonPhoneNo2">Phone Number</label>
+        <input type="tel" id="PPersonPhoneNo2" name="PPersonPhoneNo2" required>
+
+        <label for="PPersonSampleSignature2">Sample Signature</label>
+        <input type="file" id="PPersonSampleSignature2" name="PPersonSampleSignature2" accept="image/*" required>
+
+        <button type="button" class="next-btn">Next</button>
+      </div>
+
+      <div class="section">
+        <h2>Documents Upload</h2>
+        <label for="BEDCCerticate">BEDC Certificate</label>
+        <input type="file" id="BEDCCerticate" name="BEDCCerticate" accept="image/*" required>
+
+        <label for="ValidNEMSALicense">Valid NEMSA License</label>
+        <input type="file" id="ValidNEMSALicense" name="ValidNEMSALicense" accept="image/*" required>
+
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const stored = localStorage.getItem("contract");
+    if (stored) {
+      const container = JSON.parse(stored);
+      document.getElementById("contractorsName").value = container.contractorName || "";
+      document.getElementById("ContractorAddress").value = container.contractorAddress || "";
+      document.getElementById("contractorPhoneNumber").value = container.PhoneNo || "";
+      document.getElementById("contractorEmail").value = container.contractorEmail || "";
+      document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
+    } else {
+      alert("No contractor data found. Please start from the beginning.");
+      window.location.href = "index.html";
+    }
+
+    const sections = document.querySelectorAll(".section");
+    let currentStep = 0;
+
+    function showStep(index) {
+      sections.forEach((sec, i) => {
+        sec.classList.toggle("active", i === index);
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < sections.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function validateSection(section) {
+      const inputs = section.querySelectorAll("input[required]");
+      for (let input of inputs) {
+        if (!input.value) {
+          alert("Please fill out all required fields.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showStep(currentStep);
+      document.querySelectorAll(".next-btn").forEach((btn, i) => {
+        btn.addEventListener("click", () => {
+          if (validateSection(sections[i])) {
+            nextStep();
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

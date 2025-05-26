@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contractor KYC Dashboard</title>
+    <link rel="stylesheet" href="stylec.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .top-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #115219, rgb(2, 174, 28));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .search-btn {
+            background-color:#03680a;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #03680a;
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        #exportBtn {
+    background-color: #034d05;
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 10px 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  #exportBtn:hover {
+    background-color:linear-gradient(135deg, #115219, rgb(2, 174, 28));
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+        .clickable-row {
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1.title {
+            text-align: center;
+            color: #333;
+        }
+
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 300px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background-color: #03680a;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .search-btn:hover {
+            background-color: #034d05;
+        }
+   </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1 class="title">Contractor KYC Dashboard Approved </h1>
+
+        <form class="search-container" onsubmit="handleSearch(event)">
+            <input
+                type="text"
+                id="searchInput"
+                class="search-input"
+                placeholder="Search Reg No, Name, or Date"
+            />
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+
+        <div class="top-buttons">
+            <a href="Dashboard.html" class="status-btn">Home</a> <br><br>
+            <a href="contractorkyc.html" class="status-btn">View Pending</a>
+            <a href="contractorkycD.html" class="status-btn">View Declined</a>
+        </div>
+        <div class="table-container">
+            <table id="contractorTable">
+                <thead>
+                    <tr>
+                      <th>Company Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Reg No</th>
+                        <th>Principal 1 - Name</th>
+                        <th>Principal 1 - Phone</th>
+                        <th>Principal 1 - Position</th>
+                        <th>Principal 2 - Name</th>
+                        <th>Principal 2 - Phone</th>
+                        <th>Principal 2 - Position</th>
+                        <th>BEDC Certificate</th>
+                        <th>NEMSA/COREN Practicing License</th>
+                        <th>Submitted At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- JS will populate data here -->
+                </tbody>
+            </table>
+        </div>
+
+        <button id="exportBtn">Download as Excel</button>
+
+    </div>
+
+
+    <script>
+    async function populateTableByStatus(data) {
+        const tableBody = document.querySelector('#contractorTable tbody');
+        tableBody.innerHTML = ''; // Clear previous results
+
+         function createRow(contractor, statusLabel) {
+    const row = document.createElement('tr');
+    row.classList.add('clickable-row');
+    row.setAttribute('data-id', contractor.BEDCRegNo);
+    row.innerHTML = `
+        <td>${contractor.ContractorName}</td>
+        <td>${contractor.Email}</td>
+        <td>${contractor.PhoneNo}</td>
+        <td>${contractor.ContractorAddress}</td>
+        <td>${contractor.BEDCRegNo}</td>
+        <td>${contractor.PPersonFName1 || ''} ${contractor.PPersonLName1 || ''}</td>
+        <td>${contractor.PPersonPhoneNo1 || ''}</td>
+        <td>${contractor.PPersonPosition1 ||''} </td>
+        <td>${contractor.PPersonFName2 || ''} ${contractor.PPersonLName2 || ''}</td>
+        <td>${contractor.PPersonPhoneNo2 || ''}</td>
+        <td>${contractor.PPersonPosition2 || ''} </td>
+        <td><a href="${contractor.BEDCCerticate || '#'}" target="_blank">View Certificate</a></td>
+        <td><a href="${contractor.ValidNEMSALicense || '#'}" target="_blank">View License</a></td>
+        <td>${new Date(contractor.EntryDate).toLocaleString()}</td>
+    `;
+    return row;
+}
+
+
+        // Add rows grouped by status
+        ['pending', 'approved', 'declined'].forEach(status => {
+            const contractors = data[status];
+
+            if (contractors && contractors.length > 0) {
+                // Insert a label row for each status group
+                const labelRow = document.createElement('tr');
+                labelRow.innerHTML = `<td colspan="14" style="background-color: #f0f0f0; font-weight: bold;">${status.toUpperCase()}</td>`;
+                tableBody.appendChild(labelRow);
+
+                contractors.forEach(contractor => {
+                    const row = createRow(contractor, status);
+                    tableBody.appendChild(row);
+                });
+            }
+        });
+
+        document.querySelectorAll('.clickable-row').forEach(row => {
+            row.addEventListener('click', () => {
+                const BEDCRegNo = row.getAttribute('data-id');
+                window.location.href = `contractors-details.html?BEDCRegNo=${BEDCRegNo}`;
+            });
+        });
+    }
+
+    async function fetchInitialContractors() {
+        try {
+            const response = await fetch('http://localhost:4000/newdashboard/get_contractor_kycA', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'approved' }) // initial load: approved only
+            });
+            const contractors = await response.json();
+            populateTableByStatus({ pending: contractors, approved: [], declined: [] });
+        } catch (error) {
+            console.error('Error loading contractors:', error);
+        }
+    }
+
+    async function handleSearch(event) {
+        event.preventDefault();
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) {
+            alert('Please enter a search term.');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:4000/newdashboard/contractors_search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ searchTerm: query })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch search results');
+            }
+
+            const results = await response.json();
+            populateTableByStatus(results);
+        } catch (error) {
+            console.error('Search error:', error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", fetchInitialContractors);
+    
+
+    function exportTableToExcel() {
+  // Correct table ID
+  var table = document.getElementById('contractorTable');
+
+  // Convert table to workbook
+  var workbook = XLSX.utils.table_to_book(table, { sheet: "Contractors" });
+
+  // Download the workbook
+  XLSX.writeFile(workbook, 'contractors_kyc_pending.xlsx');
+}
+
+    // Add event listener to the export button
+    document.getElementById('exportBtn').addEventListener('click', exportTableToExcel); </script>
+</body>
+</html>
