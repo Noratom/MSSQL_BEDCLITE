@@ -350,4 +350,34 @@ router.post('/lineWorks', upload, async (req, res) => {
 });
 
 
+// Check KYC status by BEDCRegNo
+router.post('/checkKYCStatus', async (req, res) => {
+    try {
+        const { BEDCRegNo } = req.query;
+
+        if (!BEDCRegNo) {
+            return res.status(400).json({ status: 'error', msg: 'BEDCRegNo is required' });
+        }
+
+        const pool = await poolPromise;
+        const request = pool.request();
+        request.input('BEDCRegNo', sql.NVarChar, BEDCRegNo);
+
+        const result = await request.query(`
+            SELECT * FROM RegisteredContractors_KYC 
+            WHERE BEDCRegNo = @BEDCRegNo AND status = 'Approved'
+        `);
+
+        if (result.recordset.length > 0) {
+            return res.status(200).json({ status: 'ok', msg: 'Contractor KYC is approved', data: result.recordset[0] });
+        } else {
+            return res.status(404).json({ status: 'not_found', msg: 'No approved KYC found for this BEDCRegNo' });
+        }
+    } catch (error) {
+        console.error('Error checking KYC status:', error);
+        res.status(500).json({ status: 'error', msg: 'Internal Server Error' });
+    }
+});
+
+
         module.exports = router; 
