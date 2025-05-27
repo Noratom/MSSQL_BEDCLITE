@@ -57,7 +57,8 @@ router.post('/regcheck', async (req, res) => {
     try {
         const pool = await poolPromise;
 
-        const result = await pool.request()
+        // Check if in BEDCRegistered_Contractors
+        const resultContractors = await pool.request()
             .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
             .query(`
                 SELECT CompanyName, CompanyAddress, PhoneNumber, Email, BEDCRegNo
@@ -65,11 +66,21 @@ router.post('/regcheck', async (req, res) => {
                 WHERE BEDCRegNo = @BEDCRegNo
             `);
 
-        const contractor = result.recordset[0];
-
+        const contractor = resultContractors.recordset[0];
         if (!contractor) {
-            return res.status(404).send({ status: 'error', msg: 'Contractor not found' });
+            return res.status(404).send({ status: 'error', msg: 'Contractor not found in BEDCRegistered_Contractors' });
         }
+
+        // Check if also in RegisteredContractorKYC
+        const resultKYC = await pool.request()
+            .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
+            .query(`
+                SELECT TOP 1 BEDCRegNo
+                FROM RegisteredContractors_KYC
+                WHERE BEDCRegNo = @BEDCRegNo
+            `);
+
+        const kycRecord = resultKYC.recordset[0];
 
         const container = {
             contractorName: contractor.CompanyName,
@@ -79,7 +90,13 @@ router.post('/regcheck', async (req, res) => {
             BEDCRegNumber: contractor.BEDCRegNo,
         };
 
-        res.status(200).send({ status: 'ok', msg: 'Contractor found', container });
+        if (kycRecord) {
+            // Found in both tables
+            res.status(200).send({ status: 'ok', msg: 'Contractor found in both tables', container, redirectTo: 'network-construction.html' });
+        } else {
+            // Found only in BEDCRegistered_Contractors
+            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'Submitform.html' });
+        }
     } catch (err) {
         console.error(err);
         res.status(500).send({ status: 'error', msg: 'Server error', err });
