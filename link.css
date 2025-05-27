@@ -19,7 +19,18 @@
     margin: auto;
     padding: 1rem;
   }
-  
+  .logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.logo-container img {
+  max-height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
   /* Title Styling */
   h1 {
     text-align: center;

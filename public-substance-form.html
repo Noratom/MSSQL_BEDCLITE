@@ -6,21 +6,18 @@
   <title>Public Substation Form</title>
   <link rel="stylesheet" href="test.css" />
 </head>
-<body>
 
- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Public Substation Form</title>
-  <link rel="stylesheet" href="test.css" />
-</head>
 <body>
+  <div class="form-wrapper">
+    
+    <h2>Public Substation Form</h2>
+    <ul class="progress-bar">
+      <li class="active" data-step="1">Company Info</li>
+      <li data-step="2">Substation Details</li>
+      <li data-step="3">Upload Documents</li>
+    </ul>
 
-<div class="form-wrapper">
     <form id="substation-form" enctype="multipart/form-data">
-      <h1>Public Substation Form</h1>
 
       <!-- Step 1 -->
       <div class="form-step active">
@@ -66,94 +63,149 @@
           <option value="Warri">Warri</option>
         </select>
 
-        <button type="button" class="next-btn">Next</button>
+        <div class="nav-buttons">
+          <button type="button" class="back-btn">Back</button>
+          <button type="button" class="next-btn">Next</button>
+        </div>
       </div>
 
       <!-- Step 3 -->
       <div class="form-step">
         <h2>Upload Documents</h2>
 
-<label>
-  <input type="checkbox" id="clientLetterOfIntroductionAndUndertaking" name="clientLetterOfIntroductionAndUndertaking" required />
-  I agree to the Client Letter of Undertaking shown below
-</label>
+        <label>
+          <input type="checkbox" id="clientLetterOfIntroductionAndUndertaking" name="clientLetterOfIntroductionAndUndertaking" required />
+          I agree to the Client Letter of Undertaking shown below
+        </label>
 
-<div id="clientLetterContent" style="display: none; margin-top: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
-  <strong>Client Letter of Undertaking:</strong>
-  <p style="white-space: pre-line; margin-top: 0.5rem;">
-    I hereby undertake as follows:
+        <div id="clientLetterContent" style="display: none; margin-top: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 8px; background: #f9f9f9;">
+          <strong>Client Letter of Undertaking:</strong>
+          <p style="white-space: pre-line; margin-top: 0.5rem;">
+            I hereby undertake as follows:
 
-    1. That I am the lawful occupant/responsible party of the premises located at the provided address.
-    2. That I am requesting electricity supply from the Benin Electricity Distribution Company (BEDC) to the above-mentioned address.
-    3. That I shall ensure the electricity connection is used strictly for the approved purpose (e.g., residential, commercial, industrial).
-    4. That I shall be fully responsible for the payment of electricity bills and any other charges as may be determined by BEDC from time to time.
-    5. That I shall not engage in, nor allow any form of illegal connection, meter bypass, or tampering with BEDC equipment.
-    6. That I shall allow authorized BEDC personnel access to the premises for meter reading, inspection, or maintenance as required.
-    7. That I shall promptly notify BEDC of any fault, damage, or suspicious activity relating to the electricity supply at the premises.
-    8. That I understand any breach of this undertaking or BEDC’s regulations may result in disconnection and legal actions as deemed appropriate.
+            1. That I am the lawful occupant/responsible party of the premises located at the provided address.
+            2. That I am requesting electricity supply from the Benin Electricity Distribution Company (BEDC) to the above-mentioned address.
+            3. That I shall ensure the electricity connection is used strictly for the approved purpose (e.g., residential, commercial, industrial).
+            4. That I shall be fully responsible for the payment of electricity bills and any other charges as may be determined by BEDC from time to time.
+            5. That I shall not engage in, nor allow any form of illegal connection, meter bypass, or tampering with BEDC equipment.
+            6. That I shall allow authorized BEDC personnel access to the premises for meter reading, inspection, or maintenance as required.
+            7. That I shall promptly notify BEDC of any fault, damage, or suspicious activity relating to the electricity supply at the premises.
+            8. That I understand any breach of this undertaking or BEDC’s regulations may result in disconnection and legal actions as deemed appropriate.
 
-    This undertaking is made in good faith and with full knowledge of the responsibilities and consequences.
-  </p>
-</div>
+            This undertaking is made in good faith and with full knowledge of the responsibilities and consequences.
+          </p>
+        </div>
 
-
-        <label for="AdminFeePaymentEvidence">Evidence of Payment</label>
+        <label for="adminFeePaymentEvidence">Evidence of Payment</label>
         <input type="file" id="adminFeePaymentEvidence" name="adminFeePaymentEvidence" accept="image/*" required>
- 
+
         <label for="LetterOfDonation">Letter Of Donation From Community </label>
         <input type="file" id="LetterOfDonation" name="LetterOfDonation" accept="image/*" required>
 
-        <button type="submit">Submit</button>
+        <div class="nav-buttons">
+          <button type="button" class="back-btn">Back</button>
+          <button type="submit">Submit</button>
         </div>
+      </div>
     </form>
   </div>
 
   <script>
-
     const steps = document.querySelectorAll(".form-step");
-    const nextBtns = document.querySelectorAll(".next-btn");
+    let currentStep = 0;
 
-    nextBtns.forEach((btn, index) => {
-      btn.addEventListener("click", () => {
-        if (steps[index].querySelectorAll("input:invalid, select:invalid").length === 0) {
-          steps[index].classList.remove("active");
-          steps[index + 1].classList.add("active");
-        } else {
-          alert("Please fill all required fields.");
-        }
+    function showStep(index) {
+      steps.forEach((step, i) => {
+        step.classList.toggle("active", i === index);
       });
+      updateProgressBar(index);
+    }
+
+    function updateProgressBar(step) {
+      const progressItems = document.querySelectorAll(".progress-bar li");
+      progressItems.forEach((item, i) => {
+        item.classList.toggle("active", i <= step);
+      });
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    function validateSection(section) {
+      const inputs = section.querySelectorAll("input, select");
+      for (let input of inputs) {
+        if (input.hasAttribute("required")) {
+          if (input.type === "checkbox" && !input.checked) {
+            input.focus();
+            alert("Please complete all required fields.");
+            return false;
+          }
+          if ((input.type !== "checkbox" && !input.value) || input.value.trim() === "") {
+            input.focus();
+            alert("Please complete all required fields.");
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showStep(currentStep);
+
+      document.querySelectorAll(".next-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (validateSection(steps[currentStep])) {
+            nextStep();
+          }
+        });
+      });
+
+      document.querySelectorAll(".back-btn").forEach(btn => {
+        btn.addEventListener("click", prevStep);
+      });
+
+      // Autofill
+      const stored = localStorage.getItem("contract");
+      if (stored) {
+        const container = JSON.parse(stored);
+        document.getElementById("contractorsName").value = container.contractorName || "";
+        document.getElementById("contractorEmail").value = container.contractorEmail || "";
+        document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
+      } else {
+        alert("No contractor data found. Please start from the beginning.");
+        window.location.href = "index.html";
+      }
     });
 
-     // Toggle Client Letter of Introduction
+    // Toggle Client Letter of Introduction
     const toggleClientLetter = document.getElementById("clientLetterOfIntroductionAndUndertaking");
-  const clientLetterContent = document.getElementById("clientLetterContent");
+    const clientLetterContent = document.getElementById("clientLetterContent");
 
-  toggleClientLetter.addEventListener("change", function () {
-    clientLetterContent.style.display = this.checked ? "block" : "none";
-  });
-
-    // Autofill
-    const stored = localStorage.getItem("contract");
-    if (stored) {
-      const container = JSON.parse(stored);
-      document.getElementById("contractorsName").value = container.contractorName || "";
-      document.getElementById("contractorEmail").value = container.contractorEmail || "";
-      document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
-    } else {
-      alert("No contractor data found. Please start from the beginning.");
-      window.location.href = "index.html";
-    }
+    toggleClientLetter.addEventListener("change", function () {
+      clientLetterContent.style.display = this.checked ? "block" : "none";
+    });
 
     // Submit Form
     document.getElementById("substation-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
       try {
-      
         const response = await fetch('http://localhost:4000/newform/substation', {
-  method: "POST",
-  body: formData
-});
+          method: "POST",
+          body: formData
+        });
 
         const data = await response.json();
         if (data.success) {
@@ -166,13 +218,8 @@
       } catch (err) {
         console.error("Error:", err);
         alert("An error occurred while submitting the form.");
-      } 
+      }
     });
-
-    
-
-     </script>
-
-  
+  </script>
 </body>
 </html>

@@ -8,7 +8,15 @@
 </head>
 <body>
   <div class="form-wrapper">
+    
     <h2>Point Load Installation Form</h2>
+    <ul class="progress-bar">
+      <li class="active" data-step="1">Company Info</li>
+      <li data-step="2">Project Details</li>
+      <li data-step="3">Premises Use & Region</li>
+      <li data-step="4">Upload Documents</li>
+    </ul>
+
     <form id="Pointload-form" enctype="multipart/form-data" method="POST">
       <!-- Step 1 -->
       <div class="form-step active">
@@ -43,7 +51,11 @@
         <input type="tel" name="clientPhoneNumber" required />
         <label>Nature of Business</label>
         <input type="text" name="businessNature" required />
-        <button type="button" class="next-btn">Next</button>
+
+        <div class="nav-buttons">
+          <button type="button" class="back-btn">Back</button>
+          <button type="button" class="next-btn">Next</button>
+        </div>
       </div>
 
       <!-- Step 3 -->
@@ -70,7 +82,11 @@
           <option value="Ondo">Ondo</option>
           <option value="Warri">Warri</option>
         </select>
-        <button type="button" class="next-btn">Next</button>
+
+        <div class="nav-buttons">
+          <button type="button" class="back-btn">Back</button>
+          <button type="button" class="next-btn">Next</button>
+        </div>
       </div>
 
       <!-- Step 4 -->
@@ -87,7 +103,6 @@
           <strong>Client Letter of Undertaking:</strong>
           <p style="white-space: pre-line; margin-top: 0.5rem;">
             I hereby undertake as follows:
-
             1. That I am the lawful occupant/responsible party of the premises located at the provided address.
             2. That I am requesting electricity supply from the Benin Electricity Distribution Company (BEDC) to the above-mentioned address.
             3. That I shall ensure the electricity connection is used strictly for the approved purpose (e.g., residential, commercial, industrial).
@@ -96,7 +111,6 @@
             6. That I shall allow authorized BEDC personnel access to the premises for meter reading, inspection, or maintenance as required.
             7. That I shall promptly notify BEDC of any fault, damage, or suspicious activity relating to the electricity supply at the premises.
             8. That I understand any breach of this undertaking or BEDC’s regulations may result in disconnection and legal actions.
-
             This undertaking is made in good faith and with full knowledge of the responsibilities and consequences.
           </p>
         </div>
@@ -107,71 +121,117 @@
         <label>Client Letter Of Introduction</label>
         <input type="file" name="clientLetterOfIntroduction" required />
 
-        <button type="submit">Submit</button>
+        <div class="nav-buttons">
+          <button type="button" class="back-btn">Back</button>
+          <button type="submit">Submit</button>
+        </div>
       </div>
     </form>
   </div>
 
   <script>
     const steps = document.querySelectorAll(".form-step");
-    const nextBtns = document.querySelectorAll(".next-btn");
+    let currentStep = 0;
 
-    nextBtns.forEach((btn, index) => {
-      btn.addEventListener("click", () => {
-        if (steps[index].querySelectorAll("input:invalid, select:invalid").length === 0) {
-          steps[index].classList.remove("active");
-          steps[index + 1].classList.add("active");
-        } else {
-          alert("Please fill all required fields.");
-        }
+    function showStep(index) {
+      steps.forEach((step, i) => {
+        step.classList.toggle("active", i === index);
       });
-    });
-
-    // Toggle Client Letter
-    const toggleClientLetter = document.getElementById("clientLetterOfIntroductionAndUndertaking");
-    const clientLetterContent = document.getElementById("clientLetterContent");
-
-    toggleClientLetter.addEventListener("change", function () {
-      clientLetterContent.style.display = this.checked ? "block" : "none";
-    });
-
-    // Auto-fill from localStorage
-    const stored = localStorage.getItem("contract");
-    if (stored) {
-      const container = JSON.parse(stored);
-      document.getElementById("contractorName").value = container.contractorName || "";
-      document.getElementById("ContractorAddress").value = container.contractorAddress || "";
-      document.getElementById("contractorPhoneNumber").value = container.PhoneNo || "";
-      document.getElementById("contractorEmail").value = container.contractorEmail || "";
-      document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
-    } else {
-      alert("No contractor data found. Please start from the beginning.");
-      window.location.href = "index.html";
+      updateProgressBar(index);
     }
 
-    // Submit Form
-    document.getElementById("Pointload-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
+    function updateProgressBar(step) {
+      const progressItems = document.querySelectorAll(".progress-bar li");
+      progressItems.forEach((item, i) => {
+        item.classList.toggle("active", i <= step);
+      });
+    }
 
-      try {
-        const response = await fetch("http://localhost:4000/newform/submitPointload", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-          alert(data.msg);
-          localStorage.removeItem("contract");
-          window.location.href = "success.html";
-        } else {
-          alert("Submission failed: " + data.msg);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("An error occurred while submitting the form.");
+    function nextStep() {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        showStep(currentStep);
       }
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    function validateSection(section) {
+      const inputs = section.querySelectorAll("input, select");
+      for (let input of inputs) {
+        if (input.hasAttribute("required") && !input.value) {
+          input.focus();
+          alert("Please complete all required fields.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      showStep(currentStep);
+
+      document.querySelectorAll(".next-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (validateSection(steps[currentStep])) {
+            nextStep();
+          }
+        });
+      });
+
+      document.querySelectorAll(".back-btn").forEach(btn => {
+        btn.addEventListener("click", prevStep);
+      });
+
+      // Toggle Client Letter of Introduction
+      const toggleClientLetter = document.getElementById("clientLetterOfIntroductionAndUndertaking");
+      const clientLetterContent = document.getElementById("clientLetterContent");
+
+      toggleClientLetter.addEventListener("change", function () {
+        clientLetterContent.style.display = this.checked ? "block" : "none";
+      });
+
+      const stored = localStorage.getItem("contract");
+      if (stored) {
+        const container = JSON.parse(stored);
+        document.getElementById("contractorName").value = container.contractorName || "";
+        document.getElementById("ContractorAddress").value = container.contractorAddress || "";
+        document.getElementById("contractorPhoneNumber").value = container.PhoneNo || "";
+        document.getElementById("contractorEmail").value = container.contractorEmail || "";
+        document.getElementById("BEDCRegNo").value = container.BEDCRegNumber || "";
+      } else {
+        alert("No contractor data found. Please start from the beginning.");
+        window.location.href = "index.html";
+      }
+
+      document.getElementById("Pointload-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+          const response = await fetch("http://localhost:4000/newform/submitPointload", {
+            method: "POST",
+            body: formData
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            alert(data.msg);
+            localStorage.removeItem("contract");
+            window.location.href = "success.html";
+          } else {
+            alert("Submission failed: " + data.msg);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("An error occurred while submitting the form.");
+        }
+      });
     });
   </script>
 </body>

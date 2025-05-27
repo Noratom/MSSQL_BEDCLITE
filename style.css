@@ -1,120 +1,248 @@
-/* Reset and basic styles */
+/* Reset & base styles */
 * {
-    box-sizing: border-box;
-    margin: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f4f4;
+  padding: 20px;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+ .logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.logo-container img {
+  max-height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Progress bar */
+.progress-bar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  list-style: none;
+  padding: 0;
+}
+
+.progress-bar li {
+  width: 100%;
+  text-align: center;
+  position: relative;
+  color: #ccc;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.progress-bar li.active {
+  color: #05721c;
+}
+
+.progress-bar li::before {
+  content: attr(data-step);
+  display: block;
+  margin: 0 auto 8px;
+  background: #ccc;
+  color: white;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 50%;
+}
+
+.progress-bar li.active::before {
+  background: #05721c;
+}
+
+.progress-bar li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 0;
+  width: 100%;
+  height: 3px;
+  background: #ccc;
+  z-index: -1;
+}
+
+.progress-bar li.active:not(:last-child)::after {
+  background: #05721c;
+}
+
+/* Form labels and inputs */
+form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+form label > input[type="checkbox"] {
+  vertical-align: middle;
+  margin-right: 10px;
+}
+
+form input[type="text"],
+form input[type="email"],
+form input[type="tel"],
+form input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+form input[readonly] {
+  background-color: #f9f9f9;
+}
+
+form input[type="text"]:focus,
+form input[type="email"]:focus,
+form input[type="tel"]:focus,
+form input[type="file"]:focus {
+  border-color: #05721c;
+  outline: none;
+  box-shadow: 0 0 5px rgba(5,114,28,0.5);
+}
+
+/* Navigation buttons */
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.nav-buttons button {
+  padding: 10px 25px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #05721c;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.nav-buttons button:hover {
+  background-color: #04ac28;
+}
+
+/* Section styles with fade-in */
+.section {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.section.active {
+  display: block;
+  opacity: 1;
+}
+
+/* Checkbox spacing */
+input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Error messages */
+.error-message {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 4px;
+}
+
+ /* Progress bar */
+  .progress-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    list-style: none;
     padding: 0;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
-  
-  body, html {
+
+  .progress-bar li {
     width: 100%;
-    height: 100%;
-    overflow: hidden; /* Prevent scrolling */
-    background-color: #f0f2f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .container {
-    background: #fff;
-    width: 90%;
-    max-width: 900px;
-    height: 90vh;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  
-  h1 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
     text-align: center;
-  }
-  
-  form {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .section {
-    display: none;
-    flex-direction: column;
-    gap: 0.8rem;
-    flex: 1;
-    overflow-y: auto;
-  }
-  
-  .section.active {
-    display: flex;
-  }
-  
-  .section h2 {
-    font-size: 1.3rem;
-    margin-bottom: 0.5rem;
-    color: #333;
-  }
-  
-  label {
+    position: relative;
+    color: #ccc;
+    font-weight: 600;
     font-size: 0.9rem;
-    font-weight: 500;
-    margin-top: 0.3rem;
   }
-  
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="file"] {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-    width: 100%;
+
+  .progress-bar li.active {
+    color: #05721c;
   }
-  
-  input[readonly] {
-    background-color: #eaeaea;
-  }
-  
-  .buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-  
-  button {
-    padding: 0.6rem 1.2rem;
-    background-color: #05721c;
+
+  .progress-bar li::before {
+    content: attr(data-step);
+    display: block;
+    margin: 0 auto 8px;
+    background: #ccc;
     color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
   }
-  
-  button:hover {
-    background-color: #04ac28;
+
+  .progress-bar li.active::before {
+    background: #05721c;
   }
-  
-  @media (max-width: 768px) {
-    .container {
-      width: 95%;
-      height: 95vh;
-      padding: 1rem;
+
+  .progress-bar li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    right: 0;
+    width: 100%;
+    height: 3px;
+    background: #ccc;
+    z-index: -1;
+  }
+
+  .progress-bar li.active:not(:last-child)::after {
+    background: #05721c;
+  }
+
+ /* Responsive styles */
+  @media (max-width: 600px) {
+    .nav-buttons {
+      flex-direction: column;
+      gap: 10px;
     }
-  
-    h1 {
-      font-size: 1.4rem;
+
+    .nav-buttons button {
+      width: 100%;
     }
-  
-    .section h2 {
-      font-size: 1.1rem;
+
+    .progress-bar {
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .progress-bar li:not(:last-child)::after {
+      display: none; /* Remove horizontal connector in vertical mode */
     }
   }
-  
