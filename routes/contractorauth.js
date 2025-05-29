@@ -47,6 +47,7 @@ router.post('/signup_contractor', async (req, res) => {
 });
 
 // Contractor Registration Check Route
+// Contractor Registration Check Route
 router.post('/regcheck', async (req, res) => {
     const { BEDCRegNo } = req.body;
 
@@ -67,15 +68,16 @@ router.post('/regcheck', async (req, res) => {
             `);
 
         const contractor = resultContractors.recordset[0];
+
         if (!contractor) {
             return res.status(404).send({ status: 'error', msg: 'Contractor not found in BEDCRegistered_Contractors' });
         }
 
-        // Check if also in RegisteredContractorKYC
+        // Check if in RegisteredContractors_KYC with status
         const resultKYC = await pool.request()
             .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
             .query(`
-                SELECT TOP 1 BEDCRegNo
+                SELECT TOP 1 BEDCRegNo, Status
                 FROM RegisteredContractors_KYC
                 WHERE BEDCRegNo = @BEDCRegNo
             `);
@@ -90,11 +92,16 @@ router.post('/regcheck', async (req, res) => {
             BEDCRegNumber: contractor.BEDCRegNo,
         };
 
+        // Redirect logic based on presence and KYC status
         if (kycRecord) {
-            // Found in both tables
-            res.status(200).send({ status: 'ok', msg: 'Contractor found in both tables', container, redirectTo: 'network-construction.html' });
+            if (kycRecord.Status === 'Approved') {
+                res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
+            } else if (kycRecord.Status === 'Pending') {
+                res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
+            } else {
+                res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
+            }
         } else {
-            // Found only in BEDCRegistered_Contractors
             res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'Submitform.html' });
         }
     } catch (err) {
