@@ -94,9 +94,9 @@ router.post('/regcheck', async (req, res) => {
 
         // Redirect logic based on presence and KYC status
         if (kycRecord) {
-            if (kycRecord.Status === 'Approved') {
+            if (kycRecord.Status === 'approved') {
                 res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
-            } else if (kycRecord.Status === 'Pending') {
+            } else if (kycRecord.Status === 'pending') {
                 res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
             } else {
                 res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
