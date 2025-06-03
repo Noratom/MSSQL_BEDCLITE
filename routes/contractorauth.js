@@ -102,7 +102,7 @@ router.post('/regcheck', async (req, res) => {
                 res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
             }
         } else {
-            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'Submitform.html' });
+            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'contractorkyc.html' });
         }
     } catch (err) {
         console.error(err);
