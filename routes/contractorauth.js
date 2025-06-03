@@ -93,17 +93,17 @@ router.post('/regcheck', async (req, res) => {
         };
 
         // Redirect logic based on presence and KYC status
-        if (kycRecord) {
-            if (kycRecord.Status === 'approved') {
-                res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
-            } else if (kycRecord.Status === 'pending') {
-                res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
-            } else {
-                res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
-            }
-        } else {
-            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'contractorkyc.html' });
-        }
+      if (kycRecord) {
+    const kycStatus = kycRecord.Status?.trim().toLowerCase();
+
+    if (kycStatus === 'approved') {
+        res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
+    } else if (kycStatus === 'pending') {
+        res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
+    } else {
+        res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
+    }
+}
     } catch (err) {
         console.error(err);
         res.status(500).send({ status: 'error', msg: 'Server error', err });
