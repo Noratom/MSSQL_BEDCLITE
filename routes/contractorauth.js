@@ -108,6 +108,13 @@ router.post('/regcheck', async (req, res) => {
                     container,
                     redirectTo: 'test.html'
                 });
+            } else if (kycStatus === 'declined') {
+                return res.status(200).send({
+                    status: 'ok',
+                    msg: 'Contractor KYC declined',
+                    container,
+                    redirectTo: 'contractorkyc.html'
+                });
             } else {
                 return res.status(200).send({
                     status: 'ok',
