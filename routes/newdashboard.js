@@ -270,13 +270,18 @@ router.post('/contractor/update-status', async (req, res) => {
   try {
     const pool = await poolPromise;
     // Setup nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+  const transporter = nodemailer.createTransport({
+  host: 'smtp.office365.com',
+  port: 587,
+  secure: false, // use TLS
+  auth: {
+    user: process.env.EMAIL_USER, // e.g., noreply@yourdomain.onmicrosoft.com
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    ciphers: 'SSLv3'
+  }
+});
     // Fetch contractor details
     const contractorResult = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
@@ -313,7 +318,7 @@ router.post('/contractor/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <your_email@example.com>',
+    from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
       to: contractor.Email,
       subject,
       text,
@@ -338,13 +343,19 @@ router.post('/pointload/update-status', async (req, res) => {
   try {
     const pool = await poolPromise;
     // Setup nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+   const transporter = nodemailer.createTransport({
+  host: 'smtp.office365.com',
+  port: 587,
+  secure: false, // use TLS
+  auth: {
+    user: process.env.EMAIL_USER, // e.g., noreply@yourdomain.onmicrosoft.com
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    ciphers: 'SSLv3'
+  }
+});
+ 
     // Fetch pointload details
     const pointloadResult = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
@@ -381,7 +392,7 @@ router.post('/pointload/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" < <your_email@example.com>',
+      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
       to: pointload.ContractorEmail,
       subject,
       text,
@@ -405,13 +416,19 @@ router.post('/substation/update-status', async (req, res) => {
   try {
     const pool = await poolPromise;
     // Setup nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+   const transporter = nodemailer.createTransport({
+  host: 'smtp.office365.com',
+  port: 587,
+  secure: false, // use TLS
+  auth: {
+    user: process.env.EMAIL_USER, // e.g., noreply@yourdomain.onmicrosoft.com
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    ciphers: 'SSLv3'
+  }
+});
+ 
     // Fetch substation details
     const substationResult = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
@@ -448,7 +465,7 @@ router.post('/substation/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <your_email@example.com>',
+      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
       to: substation.ContractorEmail,
       subject,  
       text,
@@ -471,13 +488,19 @@ router.post('/linework/update-status', async (req, res) => {
   try {
     const pool = await poolPromise;
     // Setup nodemailer transporter
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+   const transporter = nodemailer.createTransport({
+  host: 'smtp.office365.com',
+  port: 587,
+  secure: false, // use TLS
+  auth: {
+    user: process.env.EMAIL_USER, // e.g., noreply@yourdomain.onmicrosoft.com
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    ciphers: 'SSLv3'
+  }
+});
+ 
     // Fetch linework details
     const lineworkResult = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
@@ -514,7 +537,7 @@ router.post('/linework/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <your_email@example.com>',
+      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
       to: linework.ContractorEmail,
       subject,
       text,
