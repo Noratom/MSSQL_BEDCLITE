@@ -92,20 +92,15 @@ router.post('/regcheck', async (req, res) => {
             BEDCRegNumber: contractor.BEDCRegNo,
         };
 
+ const kycStatus = kycRecord.Status?.trim().toLowerCase();
         // Redirect logic based on presence and KYC status
       if (kycRecord) {
-    const kycStatus = kycRecord.Status?.trim().toLowerCase();
-          
-           return res.status(200).send({
-            status: 'ok',
-            msg: 'Contractor found in BEDCRegistered_Contractors',
-            container,
-            redirectTo: 'contractorkyc.html'
-        });
-
     if (kycStatus === 'approved') {
         res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
-    } else if (kycStatus === 'pending') {
+    }else {
+            // Found only in BEDCRegistered_Contractors
+            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'Submitform.html' });
+        }  else if (kycStatus === 'pending') {
         res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
     } else {
         res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
