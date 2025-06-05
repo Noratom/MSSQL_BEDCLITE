@@ -95,6 +95,13 @@ router.post('/regcheck', async (req, res) => {
         // Redirect logic based on presence and KYC status
       if (kycRecord) {
     const kycStatus = kycRecord.Status?.trim().toLowerCase();
+          
+           return res.status(200).send({
+            status: 'ok',
+            msg: 'Contractor found in BEDCRegistered_Contractors',
+            container,
+            redirectTo: 'submitform.html'
+        });
 
     if (kycStatus === 'approved') {
         res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
