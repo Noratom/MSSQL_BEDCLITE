@@ -47,7 +47,6 @@ router.post('/signup_contractor', async (req, res) => {
 });
 
 // Contractor Registration Check Route
-// Contractor Registration Check Route
 router.post('/regcheck', async (req, res) => {
     const { BEDCRegNo } = req.body;
 
@@ -58,7 +57,7 @@ router.post('/regcheck', async (req, res) => {
     try {
         const pool = await poolPromise;
 
-        // Check if in BEDCRegistered_Contractors
+        // Step 1: Check in BEDCRegistered_Contractors
         const resultContractors = await pool.request()
             .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
             .query(`
@@ -73,17 +72,6 @@ router.post('/regcheck', async (req, res) => {
             return res.status(404).send({ status: 'error', msg: 'Contractor not found in BEDCRegistered_Contractors' });
         }
 
-        // Check if in RegisteredContractors_KYC with status
-        const resultKYC = await pool.request()
-            .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
-            .query(`
-                SELECT TOP 1 BEDCRegNo, Status
-                FROM RegisteredContractors_KYC
-                WHERE BEDCRegNo = @BEDCRegNo
-            `);
-
-        const kycRecord = resultKYC.recordset[0];
-
         const container = {
             contractorName: contractor.CompanyName,
             contractorAddress: contractor.CompanyAddress,
@@ -92,11 +80,19 @@ router.post('/regcheck', async (req, res) => {
             BEDCRegNumber: contractor.BEDCRegNo,
         };
 
- const kycRecord = resultKYC.recordset[0];
+        // Step 2: Check in RegisteredContractors_KYC
+        const resultKYC = await pool.request()
+            .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
+            .query(`
+                SELECT TOP 1 BEDCRegNo, Status
+                FROM RegisteredContractors_KYC
+                WHERE BEDCRegNo = @BEDCRegNo
+            `);
 
-        // Step 3: Redirect based on KYC status or absence
-        if (kycRecord) {
-            const kycStatus = kycRecord.Status?.trim().toLowerCase();
+        const recordset = resultKYC.recordset;
+        
+        if (recordset.length > 0) {
+            const kycStatus = recordset[0].Status?.trim().toLowerCase();
 
             if (kycStatus === 'approved') {
                 return res.status(200).send({
@@ -115,18 +111,18 @@ router.post('/regcheck', async (req, res) => {
             } else {
                 return res.status(200).send({
                     status: 'ok',
-                    msg: `Contractor KYC Status: ${kycRecord.Status}`,
+                    msg: `Contractor KYC Status: ${recordset[0].Status}`,
                     container,
                     redirectTo: 'test.html'
                 });
             }
         } else {
-            // No KYC record but exists in BEDCRegistered_Contractors
+            // No KYC record but found in BEDCRegistered_Contractors
             return res.status(200).send({
                 status: 'ok',
                 msg: 'Contractor found only in BEDCRegistered_Contractors',
                 container,
-                redirectTo: 'contractorkyc.html'
+                redirectTo: 'submitform.html'
             });
         }
 
