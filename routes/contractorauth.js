@@ -122,7 +122,7 @@ router.post('/regcheck', async (req, res) => {
                 status: 'ok',
                 msg: 'Contractor found only in BEDCRegistered_Contractors',
                 container,
-                redirectTo: 'submitform.html'
+                redirectTo: 'contractorkyc.html'
             });
         }
 
