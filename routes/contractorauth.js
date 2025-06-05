@@ -92,20 +92,44 @@ router.post('/regcheck', async (req, res) => {
             BEDCRegNumber: contractor.BEDCRegNo,
         };
 
- const kycStatus = kycRecord.Status?.trim().toLowerCase();
-        // Redirect logic based on presence and KYC status
-      if (kycRecord) {
-    if (kycStatus === 'approved') {
-        res.status(200).send({ status: 'ok', msg: 'Contractor Approved', container, redirectTo: 'network-construction.html' });
-    }else {
-            // Found only in BEDCRegistered_Contractors
-            res.status(200).send({ status: 'ok', msg: 'Contractor found only in BEDCRegistered_Contractors', container, redirectTo: 'Submitform.html' });
-        }  else if (kycStatus === 'pending') {
-        res.status(200).send({ status: 'ok', msg: 'Contractor KYC Pending', container, redirectTo: 'test.html' });
-    } else {
-        res.status(200).send({ status: 'ok', msg: `Contractor KYC Status: ${kycRecord.Status}`, container, redirectTo: 'test.html' });
-    }
-}
+ const kycRecord = resultKYC.recordset[0];
+
+        // Step 3: Redirect based on KYC status or absence
+        if (kycRecord) {
+            const kycStatus = kycRecord.Status?.trim().toLowerCase();
+
+            if (kycStatus === 'approved') {
+                return res.status(200).send({
+                    status: 'ok',
+                    msg: 'Contractor Approved',
+                    container,
+                    redirectTo: 'network-construction.html'
+                });
+            } else if (kycStatus === 'pending') {
+                return res.status(200).send({
+                    status: 'ok',
+                    msg: 'Contractor KYC Pending',
+                    container,
+                    redirectTo: 'test.html'
+                });
+            } else {
+                return res.status(200).send({
+                    status: 'ok',
+                    msg: `Contractor KYC Status: ${kycRecord.Status}`,
+                    container,
+                    redirectTo: 'test.html'
+                });
+            }
+        } else {
+            // No KYC record but exists in BEDCRegistered_Contractors
+            return res.status(200).send({
+                status: 'ok',
+                msg: 'Contractor found only in BEDCRegistered_Contractors',
+                container,
+                redirectTo: 'contractorkyc.html'
+            });
+        }
+
     } catch (err) {
         console.error(err);
         res.status(500).send({ status: 'error', msg: 'Server error', err });
