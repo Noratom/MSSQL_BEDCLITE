@@ -306,22 +306,27 @@ router.post('/contractor/update-status', async (req, res) => {
       .input('reason', sql.VarChar, reason || '')
       .query(updateQuery);
 
-    // Prepare email content
-    let subject = `Your Contractor Registration has been ${status}`;
-    let text = `Dear ${contractor.ContractorName},\n\nYour contractor registration  with BEDCRegNo ${BEDCRegNo} has been ${status}`;
+      // Prepare email content
+    const subject = `Your Contractor Registration has been ${status}`;
+    let text = `Dear ${contractor.ContractorName},\n\nYour contractor registration with BEDCRegNo ${BEDCRegNo} has been ${status}.`;
+    let html = `<p>Dear ${contractor.ContractorName},</p><p>Your contractor registration with BEDCRegNo <strong>${BEDCRegNo}</strong> has been <strong>${status}</strong>.</p>`;
 
-    if (status === 'declined' && reason) {
-      text += `\nReason for decline: ${reason}\n\nPlease contact support for more details.`;
+    if (status.toLowerCase() === 'declined' && reason) {
+      text += `\nReason for decline: ${reason}\n\nPlease fill the form again: https://yourdomain.com/contractor-registration`;
+      html += `<p><strong>Reason for decline:</strong> ${reason}</p>`;
+      html += `<p>Please <a href="https://netapp.beninelectric.com:45790/index.html">click here</a> to fill the form again.</p>`;
     }
 
     text += `\n\nBest regards,\nBEDC Team`;
+    html += `<p>Best regards,<br>BEDC Team</p>`;
 
     // Send email
     await transporter.sendMail({
-    from: '"BEDC Support" <noreply@beninelectric.com>',
+      from: '"BEDC Support" <noreply@beninelectric.com>',
       to: contractor.Email,
       subject,
-      text,
+      text, // Plain fallback
+      html  // Rich content
     });
 
     res.json({ message: `Status updated to ${status} and email sent.` });
