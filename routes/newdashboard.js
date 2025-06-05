@@ -318,7 +318,7 @@ router.post('/contractor/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-    from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
+    from: '"BEDC Support" <noreply@beninelectric.com>',
       to: contractor.Email,
       subject,
       text,
@@ -392,7 +392,7 @@ router.post('/pointload/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
+      from: '"BEDC Support" <noreply@beninelectric.com>',
       to: pointload.ContractorEmail,
       subject,
       text,
@@ -465,7 +465,7 @@ router.post('/substation/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
+      from: '"BEDC Support" <noreply@beninelectric.com>',
       to: substation.ContractorEmail,
       subject,  
       text,
@@ -537,7 +537,7 @@ router.post('/linework/update-status', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"BEDC Support" <noreply@yourdomain.onmicrosoft.com>',
+      from: '"BEDC Support" <noreply@beninelectric.com>',
       to: linework.ContractorEmail,
       subject,
       text,
