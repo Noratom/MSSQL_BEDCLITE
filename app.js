@@ -6,7 +6,7 @@ const contractorRoutes = require('./routes/contractorauth');
 const formsRoutes = require('./routes/forms');
 const newFormRoutes = require('./routes/newform');
 const newdashboardRoutes = require('./routes/newdashboard');
-const dashboardRoutes = require('./routes/dashboard.js');
+
 
 
 // Load .env variables
@@ -24,7 +24,7 @@ app.use('/contractor', contractorRoutes);     // e.g., POST /api/contractor/regi
 app.use('/forms', formsRoutes);               // e.g., GET /api/forms
 app.use('/newform', newFormRoutes);           // e.g., POST /api/newform
 app.use('/newdashboard', newdashboardRoutes);       // e.g., POST /api/dashboard
-app.use('/dashboard', dashboardRoutes); 
+
 
 // Health check route
 app.get('/', (req, res) => {
