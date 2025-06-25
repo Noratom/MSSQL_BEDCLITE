@@ -1,5 +1,5 @@
 const express = require('express');
-const { sql, poolPromise } = require('../db');
+const { sql, getConnection } = require('../db');
 const path = require('path');
 const dotenv = require('dotenv');
 const nodemailer = require('nodemailer');
@@ -10,7 +10,7 @@ dotenv.config();
 // Route to get all contractors KYC pending
 router.post('/get_contractor_kyc', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+      const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM RegisteredContractors_KYC WHERE status = 'pending' ORDER BY EntryDate ASC`);
 
@@ -24,7 +24,7 @@ router.post('/get_contractor_kyc', async (req, res) => {
 // Route to get all contractors KYC approved
 router.post('/get_contractor_kycA', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM RegisteredContractors_KYC WHERE status = 'approved' ORDER BY EntryDate ASC`);
 
@@ -38,7 +38,7 @@ router.post('/get_contractor_kycA', async (req, res) => {
 // Route to get all contractors KYC rejected
 router.post('/get_contractor_kycD', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM RegisteredContractors_KYC WHERE status = 'declined' ORDER BY EntryDate ASC`);
 
@@ -52,7 +52,7 @@ router.post('/get_contractor_kycD', async (req, res) => {
 // Route to get all Pointload pending
 router.post('/get_pointload', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM PointLoad_Applications WHERE status = 'pending' ORDER BY CreatedAt ASC`);
 
@@ -66,7 +66,7 @@ router.post('/get_pointload', async (req, res) => {
 // Route to get all Pointload approved
 router.post('/get_pointloadA', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+        const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM PointLoad_Applications WHERE status = 'approved' ORDER BY CreatedAt ASC`);
 
@@ -80,7 +80,7 @@ router.post('/get_pointloadA', async (req, res) => {
 // Route to get all Pointload rejected
 router.post('/get_pointloadD', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+        const pool = await getConnection();
         const result = await pool.request()
             .query(`SELECT * FROM PointLoad_Applications WHERE status = 'declined' ORDER BY CreatedAt ASC`);
 
@@ -94,7 +94,7 @@ router.post('/get_pointloadD', async (req, res) => {
 // Route to get all substation pending
 router.post('/get_substation', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM Substation_Applications WHERE status = 'pending' ORDER BY CreatedAt ASC`);
 
@@ -108,7 +108,8 @@ router.post('/get_substation', async (req, res) => {
 // Route to get all substation approved
 router.post('/get_substationA', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+        
+        const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM Substation_Applications WHERE status = 'approved' ORDER BY CreatedAt ASC`);
 
@@ -122,7 +123,7 @@ router.post('/get_substationA', async (req, res) => {
 // Route to get all substation rejected 
 router.post('/get_substationD', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+        const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM Substation_Applications WHERE status = 'declined' ORDER BY CreatedAt ASC`);
 
@@ -136,7 +137,7 @@ router.post('/get_substationD', async (req, res) => {
 //Route  to get all Line Work pending
 router.post('/get_linework', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM LineWorks_Applications WHERE status = 'pending' ORDER BY CreatedAt ASC`);
 
@@ -150,7 +151,7 @@ router.post('/get_linework', async (req, res) => {
 // Route to get all Line Work approved
 router.post('/get_lineworkA', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+       const pool = await getConnection();// Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM LineWorks_Applications WHERE status = 'approved' ORDER BY CreatedAt ASC`);
 
@@ -164,7 +165,7 @@ router.post('/get_lineworkA', async (req, res) => {
 // Route to get all Line Work rejected
 router.post('/get_lineworkD', async (req, res) => {
     try {
-        const pool = await poolPromise; // Use your configured poolPromise
+        const pool = await getConnection(); // Use your configured poolPromise
         const result = await pool.request()
             .query(`SELECT * FROM LineWorks_Applications WHERE status = 'declined' ORDER BY CreatedAt ASC`);
 
@@ -182,7 +183,7 @@ router.post('/get_contractor/one', async (req, res) => {
   if (!BEDCRegNo) return res.status(400).send('BEDC Registration Number is required');
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
       .query(`SELECT TOP 1 * FROM RegisteredContractors_KYC WHERE BEDCRegNo = @BEDCRegNo`);
@@ -203,8 +204,8 @@ router.post('/get_pointload/one', async (req, res) => {
   if (!CreatedAt) return res.status(400).send('CreatedAt is required');
 
   try {
-    const pool = await poolPromise;
-    const result = await pool.request()
+    const pool = await getConnection();
+      const result = await pool.request()
       .input('CreatedAt', sql.DateTime, CreatedAt)
       .query(`SELECT TOP 1 * FROM PointLoad_Applications WHERE CreatedAt = @CreatedAt`);
 
@@ -224,7 +225,7 @@ router.post('/get_substation/one', async (req, res) => {
   if (!CreatedAt) return res.status(400).send('CreatedAt is required');
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('CreatedAt', sql.DateTime, CreatedAt)
       .query(`SELECT TOP 1 * FROM Substation_Applications WHERE CreatedAt = @CreatedAt`);
@@ -245,7 +246,7 @@ router.post('/get_linework/one', async (req, res) => {
   if (!CreatedAt) return res.status(400).send('CreatedAt is required');
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('CreatedAt', sql.DateTime, CreatedAt)
       .query(`SELECT TOP 1 * FROM LineWorks_Applications WHERE CreatedAt = @CreatedAt`);
@@ -268,8 +269,8 @@ router.post('/contractor/update-status', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
-    // Setup nodemailer transporter
+    const pool = await getConnection();
+      // Setup nodemailer transporter
   const transporter = nodemailer.createTransport({
   host: 'smtp.office365.com',
   port: 587,
@@ -346,8 +347,8 @@ router.post('/pointload/update-status', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
-    // Setup nodemailer transporter
+   const pool = await getConnection();
+      // Setup nodemailer transporter
    const transporter = nodemailer.createTransport({
   host: 'smtp.office365.com',
   port: 587,
@@ -419,7 +420,7 @@ router.post('/substation/update-status', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     // Setup nodemailer transporter
    const transporter = nodemailer.createTransport({
   host: 'smtp.office365.com',
@@ -491,7 +492,7 @@ router.post('/linework/update-status', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     // Setup nodemailer transporter
    const transporter = nodemailer.createTransport({
   host: 'smtp.office365.com',
@@ -558,7 +559,7 @@ router.post('/linework/update-status', async (req, res) => {
 // Route to fetch dashboard counts
 router.post('/dashboard-counts', async (req, res) => {
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
 
     const contractorQuery = `
       SELECT
@@ -636,7 +637,7 @@ router.post('/contractors_search', async (req, res) => {
     }
 
     try {
-      const pool = await poolPromise;
+      const pool = await getConnection();
 
         const request = pool.request();
         request.input('searchTerm', sql.VarChar, searchTerm);
@@ -674,7 +675,7 @@ router.post('/pointloads_search', async (req, res) => {
     }
 
     try {
-      const pool = await poolPromise;
+      const pool = await getConnection();
 
         const request = pool.request();
         request.input('searchTerm', sql.VarChar, searchTerm);
@@ -712,7 +713,7 @@ router.post('/substations_search', async (req, res) => {
     }
 
     try {
-      const pool = await poolPromise;
+      const pool = await getConnection();
 
         const request = pool.request();
         request.input('searchTerm', sql.VarChar, searchTerm);
@@ -750,8 +751,8 @@ router.post('/lineworks_search', async (req, res) => {
     }
 
     try {
-      const pool = await poolPromise;
-
+      const pool = await getConnection();
+        
         const request = pool.request();
         request.input('searchTerm', sql.VarChar, searchTerm);
 
@@ -800,7 +801,7 @@ router.post('/downloadcontractors', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
       .query(`SELECT ${columnName} FROM RegisteredContractors_KYC WHERE BEDCRegNo = @BEDCRegNo`);
@@ -843,7 +844,7 @@ router.post('/downloadpointloads', async (req, res) => {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('CreatedAt', sql.DateTime, CreatedAt)
       .query(`SELECT ${columnName} FROM PointLoad_Applications WHERE CreatedAt = @CreatedAt`);
@@ -884,7 +885,7 @@ const columnMap = {
   }
 
   try {
-    const pool = await poolPromise;
+    const pool = await getConnection();
     const result = await pool.request()
       .input('CreatedAt', sql.DateTime, CreatedAt)
       .query(`SELECT ${columnName} FROM Substation_Applications WHERE CreatedAt = @CreatedAt`);
