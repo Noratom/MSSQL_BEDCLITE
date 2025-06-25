@@ -560,7 +560,6 @@ router.post('/dashboard-counts', async (req, res) => {
   try {
     const pool = await poolPromise;
 
-    // Use COUNT with GROUP BY and conditional aggregation to get counts in one query per table:
     const contractorQuery = `
       SELECT
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pendingCount,
@@ -593,7 +592,6 @@ router.post('/dashboard-counts', async (req, res) => {
       FROM LineWorks_Applications
     `;
 
-    // Run queries in parallel for better performance:
     const [
       contractorResult,
       pointloadResult,
@@ -623,10 +621,9 @@ router.post('/dashboard-counts', async (req, res) => {
       networkApprovedCount: networkResult.recordset[0].approvedCount || 0,
       networkDeclinedCount: networkResult.recordset[0].declinedCount || 0,
     });
-
   } catch (error) {
     console.error('Error fetching dashboard counts:', error);
-    res.status(500).send('Server Error');
+    res.status(500).json({ status: 'error', message: 'Server error while fetching dashboard counts', error: error.message });
   }
 });
 
