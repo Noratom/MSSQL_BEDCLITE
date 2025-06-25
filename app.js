@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const contractorRoutes = require('./routes/contractorauth');
 const formsRoutes = require('./routes/forms');
 const newFormRoutes = require('./routes/newform');
-const dashboardRoutes = require('./routes/newdashboard');
+const newdashboardRoutes = require('./routes/newdashboard');
 
 // Load .env variables
 dotenv.config();
@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/contractor', contractorRoutes);     // e.g., POST /api/contractor/register
 app.use('/forms', formsRoutes);               // e.g., GET /api/forms
 app.use('/newform', newFormRoutes);           // e.g., POST /api/newform
-app.use('/newdashboard', dashboardRoutes);       // e.g., GET /api/dashboard
+app.use('/newdashboard', newdashboardRoutes);       // e.g., GET /api/dashboard
 
 // Health check route
 app.get('/', (req, res) => {
