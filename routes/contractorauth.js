@@ -1,7 +1,7 @@
 // routes/contractorauth.js
 const express = require('express');
 const router = express.Router();
-const { getConnection, sql } = require('../db');  // Updated import
+const { sql, poolPromise } = require('../db');  // Updated import
 
 // Contractor Signup Route
 router.post('/signup_contractor', async (req, res) => {
@@ -21,7 +21,7 @@ router.post('/signup_contractor', async (req, res) => {
   }
 
   try {
-    const pool = await getConnection();
+   const pool = await poolPromise;
 
     // Check for existing contractor
     const existing = await pool.request()
@@ -64,7 +64,7 @@ router.post('/regcheck', async (req, res) => {
   }
 
   try {
-    const pool = await getConnection();
+   const pool = await poolPromise;
 
     // Step 1: Check if contractor exists
     const resultContractors = await pool.request()
