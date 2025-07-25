@@ -258,4 +258,121 @@ router.get('/session-info', (req, res) => {
   }
 });
 
+
+// Admin Signup Route — Plaintext password (not hashed)
+router.post('/admin_signup', async (req, res) => {
+  const {
+    username,
+    password,
+    firstName,
+    lastName,
+    otherName,
+    email,            // <-- now accepted
+    phoneNumber,
+    region,
+    bu,
+    role,
+    bedcRegNo
+  } = req.body;
+
+  const fullName = `${firstName} ${lastName}${otherName ? ' ' + otherName : ''}`;
+  const staffId = phoneNumber;
+  const status = 'Active';
+  const created = new Date();
+
+  try {
+    const pool = await poolPromise;
+
+    // Check if username or email already exists
+    const check = await pool.request()
+      .input('Username', sql.VarChar, username)
+      .input('Email', sql.VarChar, email)
+      .query(`
+        SELECT * FROM TechCon_login 
+        WHERE Username = @Username OR Email = @Email
+      `);
+
+    if (check.recordset.length > 0) {
+      return res.status(409).json({ msg: 'Username or Email already exists' });
+    }
+
+    // Insert new admin into the DB
+    await pool.request()
+      .input('Username', sql.VarChar, username)
+      .input('Password', sql.VarChar, password)
+      .input('Name', sql.VarChar, fullName)
+      .input('Staffid', sql.VarChar, staffId)
+      .input('Role', sql.VarChar, role)
+      .input('Status', sql.VarChar, status)
+      .input('Created', sql.DateTime, created)
+      .input('BEDCRegNo', sql.VarChar, bedcRegNo)
+      .input('Region', sql.VarChar, region)
+      .input('BU', sql.VarChar, bu)
+      .input('Email', sql.VarChar, email) // <-- inserted here
+      .query(`
+        INSERT INTO TechCon_login 
+        (Username, Password, Name, Staffid, Role, Status, Created, BEDCRegNo, Region, BU, Email)
+        VALUES 
+        (@Username, @Password, @Name, @Staffid, @Role, @Status, @Created, @BEDCRegNo, @Region, @BU, @Email)
+      `);
+
+    return res.status(201).json({ msg: 'Admin signup successful' });
+  } catch (err) {
+    console.error('Admin signup error:', err);
+    return res.status(500).json({ msg: 'Server error', error: err.message });
+  }
+});
+
+// POST /contractors/admin_login
+router.post('/admin_login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ msg: 'Username/Email and password are required.' });
+  }
+
+  try {
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('emailOrUsername', sql.VarChar, email)
+      .query(`
+        SELECT TOP 1 * 
+        FROM [TechContract].[dbo].[TechCon_login]
+        WHERE Username = @emailOrUsername OR Email = @emailOrUsername
+      `);
+
+    const user = result.recordset[0];
+
+    if (!user) {
+      return res.status(401).json({ msg: 'Invalid username/email or password' });
+    }
+
+    // Simple password check (not hashed)
+    if (user.Password !== password) {
+      return res.status(401).json({ msg: 'Invalid username/email or password' });
+    }
+
+    res.status(200).json({
+      msg: 'Login successful',
+      user: {
+        id: user.id,
+        username: user.Username,
+        email: user.Email,
+        name: user.Name,
+        staffId: user.Staffid,
+        role: user.Role,
+        status: user.Status,
+        region: user.Region,
+        BU: user.BU,
+        BEDCRegNo: user.BEDCRegNo
+      }
+    });
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
+
 module.exports = router;
