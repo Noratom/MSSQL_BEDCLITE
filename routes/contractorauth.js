@@ -162,7 +162,7 @@ router.post('/login', async (req, res) => {
 
     const kycRecord = resultKYC.recordset[0];
     let msg = 'Contractor found only in BEDCRegistered_Contractors';
-    let redirectTo = 'Submitform.html';
+    let redirectTo = 'contractorkyc.html';
 
     if (kycRecord) {
       const status = kycRecord.Status?.trim().toLowerCase();
