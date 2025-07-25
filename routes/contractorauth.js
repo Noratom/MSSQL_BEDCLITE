@@ -1,72 +1,142 @@
-// routes/contractorauth.js
+// routes/auth.js
 const express = require('express');
-const router = express.Router();
-const { sql, poolPromise } = require('../db');  // Updated import
+const router = express.Router(); 
+const bcrypt = require('bcryptjs');
+const { sql, poolPromise } = require('../db'); // adjust path to your db config
+
 
 // Contractor Signup Route
 router.post('/signup_contractor', async (req, res) => {
-  const {
-    CompanyName,
-    Email,
-    CompanyAddress,
-    ContractorCategory,
-    BEDCRegNo,
-    NEMSAClass,
-    PhoneNumber
-  } = req.body;
+    const { CompanyName, Email, CompanyAddress, ContractorCategory, BEDCRegNo, NEMSAClass, PhoneNumber } = req.body;
 
-  // Validate required fields
-  if (!CompanyName || !Email || !CompanyAddress || !ContractorCategory || !BEDCRegNo || !NEMSAClass || !PhoneNumber) {
-    return res.status(400).json({ status: 'error', msg: 'All fields must be filled' });
+    if (!CompanyName || !Email || !CompanyAddress || !ContractorCategory || !BEDCRegNo || !NEMSAClass || !PhoneNumber) {
+        return res.status(400).send({ status: 'error', msg: 'All fields must be filled' });
+    }
+
+    try {
+        const pool = await poolPromise;
+
+        // Check if contractor already exists
+        const existing = await pool.request()
+            .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
+            .query('SELECT * FROM BEDCRegistered_Contractors WHERE BEDCRegNo = @BEDCRegNo');
+
+        if (existing.recordset.length > 0) {
+            return res.status(400).send({ status: 'error', msg: 'Contractor already exists' });
+        }
+
+        // Insert new contractor
+        await pool.request()
+            .input('CompanyName', sql.VarChar, CompanyName)
+            .input('Email', sql.VarChar, Email)
+            .input('CompanyAddress', sql.VarChar, CompanyAddress)
+            .input('ContractorCategory', sql.VarChar, ContractorCategory)
+            .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
+            .input('NEMSAClass', sql.VarChar, NEMSAClass)
+            .input('PhoneNumber', sql.VarChar, PhoneNumber)
+            .query(`
+                INSERT INTO BEDCRegistered_Contractors 
+                (CompanyName, Email, CompanyAddress, ContractorCategory, BEDCRegNo, NEMSAClass, PhoneNumber, EntryDate)
+                VALUES 
+                (@CompanyName, @Email, @CompanyAddress, @ContractorCategory, @BEDCRegNo, @NEMSAClass, @PhoneNumber, GETDATE())
+            `);
+
+        res.status(200).send({ status: 'ok', msg: 'Contractor registered successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ status: 'error', msg: 'Server error', err });
+    }
+});
+
+// Signup Route - Skipping OTP Verification
+router.post('/signup', async (req, res) => {
+  const { BEDCRegNo, email, phoneNumber, username, password } = req.body;
+
+  if (!BEDCRegNo || !email || !phoneNumber || !username || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
   }
 
   try {
-   const pool = await poolPromise;
+    const pool = await poolPromise;
 
-    // Check for existing contractor
-    const existing = await pool.request()
+    // Step 1: Check if BEDCRegNo and Email exist in BEDCRegistered_Contractors
+    const contractorCheck = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
-      .query('SELECT * FROM BEDCRegistered_Contractors WHERE BEDCRegNo = @BEDCRegNo');
-
-    if (existing.recordset.length > 0) {
-      return res.status(400).json({ status: 'error', msg: 'Contractor already exists' });
-    }
-
-    // Insert new contractor
-    await pool.request()
-      .input('CompanyName', sql.VarChar, CompanyName)
-      .input('Email', sql.VarChar, Email)
-      .input('CompanyAddress', sql.VarChar, CompanyAddress)
-      .input('ContractorCategory', sql.VarChar, ContractorCategory)
-      .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
-      .input('NEMSAClass', sql.VarChar, NEMSAClass)
-      .input('PhoneNumber', sql.VarChar, PhoneNumber)
+      .input('Email', sql.VarChar, email)
       .query(`
-        INSERT INTO BEDCRegistered_Contractors 
-        (CompanyName, Email, CompanyAddress, ContractorCategory, BEDCRegNo, NEMSAClass, PhoneNumber, EntryDate)
-        VALUES 
-        (@CompanyName, @Email, @CompanyAddress, @ContractorCategory, @BEDCRegNo, @NEMSAClass, @PhoneNumber, GETDATE())
+        SELECT * FROM BEDCRegistered_Contractors
+        WHERE BEDCRegNo = @BEDCRegNo AND Email = @Email
       `);
 
-    return res.status(200).json({ status: 'ok', msg: 'Contractor registered successfully' });
+    if (contractorCheck.recordset.length === 0) {
+      return res.status(404).json({ message: 'No matching contractor found in registry' });
+    }
+
+    // Step 2: Check if username already exists in ContractorAccounts
+    const existingUserCheck = await pool.request()
+      .input('Username', sql.VarChar, username)
+      .query(`SELECT * FROM ContractorAccounts WHERE Username = @Username`);
+
+    if (existingUserCheck.recordset.length > 0) {
+      return res.status(409).json({ message: 'Username already taken' });
+    }
+
+    // Step 3: Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Step 4: Save new account to ContractorAccounts
+    await pool.request()
+      .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
+      .input('Username', sql.VarChar, username)
+      .input('PhoneNumber', sql.VarChar, phoneNumber)
+      .input('EmailAddress', sql.VarChar, email)
+      .input('Password', sql.VarChar, hashedPassword)
+      .input('CreatedAt', sql.DateTime, new Date())
+      .query(`
+        INSERT INTO ContractorAccounts 
+        (BEDCRegNo, Username, PhoneNumber, EmailAddress, Password, CreatedAt)
+        VALUES (@BEDCRegNo, @Username, @PhoneNumber, @EmailAddress, @Password, @CreatedAt)
+      `);
+
+    return res.status(201).json({ message: 'Signup successful' });
+
   } catch (err) {
-    console.error('Signup Error:', err);
-    return res.status(500).json({ status: 'error', msg: 'Server error', err: err.message });
+    console.error('Signup error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Contractor Registration Check Route
-router.post('/regcheck', async (req, res) => {
-  const { BEDCRegNo } = req.body;
+// Login Route - Returns contractor container directly, no session
+router.post('/login', async (req, res) => {
+  const { username, password } = req.body;
 
-  if (!BEDCRegNo) {
-    return res.status(400).json({ status: 'error', msg: 'BEDC Registration Number is required' });
+  if (!username || !password) {
+    return res.status(400).json({ status: 'error', msg: 'Username and password are required' });
   }
 
   try {
-   const pool = await poolPromise;
+    const pool = await poolPromise;
 
-    // Step 1: Check if contractor exists
+    // Step 1: Find user by username
+    const userResult = await pool.request()
+      .input('Username', sql.VarChar, username)
+      .query('SELECT * FROM ContractorAccounts WHERE Username = @Username');
+
+    if (userResult.recordset.length === 0) {
+      return res.status(401).json({ status: 'error', msg: 'Invalid Username' });
+    }
+
+    const user = userResult.recordset[0];
+
+    // Step 2: Verify password
+    const match = await bcrypt.compare(password, user.Password);
+    if (!match) {
+      return res.status(401).json({ status: 'error', msg: 'Invalid Password' });
+    }
+
+    const BEDCRegNo = user.BEDCRegNo;
+
+    // Step 3: Fetch contractor details from BEDCRegistered_Contractors
     const resultContractors = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
       .query(`
@@ -78,18 +148,10 @@ router.post('/regcheck', async (req, res) => {
     const contractor = resultContractors.recordset[0];
 
     if (!contractor) {
-      return res.status(404).json({ status: 'error', msg: 'Contractor not found' });
+      return res.status(404).json({ status: 'error', msg: 'Contractor not found in BEDCRegistered_Contractors' });
     }
 
-    const container = {
-      contractorName: contractor.CompanyName,
-      contractorAddress: contractor.CompanyAddress,
-      PhoneNo: contractor.PhoneNumber,
-      contractorEmail: contractor.Email,
-      BEDCRegNumber: contractor.BEDCRegNo
-    };
-
-    // Step 2: Check KYC status
+    // Step 4: Check KYC status (optional redirect logic)
     const resultKYC = await pool.request()
       .input('BEDCRegNo', sql.VarChar, BEDCRegNo)
       .query(`
@@ -98,38 +160,101 @@ router.post('/regcheck', async (req, res) => {
         WHERE BEDCRegNo = @BEDCRegNo
       `);
 
-    const recordset = resultKYC.recordset;
+    const kycRecord = resultKYC.recordset[0];
+    let msg = 'Contractor found only in BEDCRegistered_Contractors';
+    let redirectTo = 'Submitform.html';
 
-    if (recordset.length > 0) {
-      const status = recordset[0].Status?.trim().toLowerCase();
-
-      let msg = 'Contractor KYC Status: ' + status;
-      let redirectTo = 'test.html';
-
+    if (kycRecord) {
+      const status = kycRecord.Status?.trim().toLowerCase();
       if (status === 'approved') {
         msg = 'Contractor Approved';
         redirectTo = 'network-construction.html';
       } else if (status === 'pending') {
         msg = 'Contractor KYC Pending';
+        redirectTo = 'Success.html';
       } else if (status === 'declined') {
         msg = 'Contractor KYC Declined';
-        redirectTo = 'contractorkyc.html';
+      } else {
+        msg = 'Contractor KYC Status: ' + status;
       }
-
-      return res.status(200).json({ status: 'ok', msg, container, redirectTo });
     }
 
-    // Contractor found but no KYC record
+    // ✅ Final Contractor Container
+    const container = {
+      contractorName: contractor.CompanyName,
+      contractorAddress: contractor.CompanyAddress,
+      PhoneNo: contractor.PhoneNumber,
+      contractorEmail: contractor.Email,
+      BEDCRegNumber: contractor.BEDCRegNo
+    };
+
     return res.status(200).json({
       status: 'ok',
-      msg: 'Contractor found only in BEDCRegistered_Contractors',
+      msg,
       container,
-      redirectTo: 'contractorkyc.html'
+      redirectTo
     });
 
   } catch (err) {
-    console.error('RegCheck Error:', err);
+    console.error('Login Error:', err);
     return res.status(500).json({ status: 'error', msg: 'Server error', err: err.message });
+  }
+});
+
+// Forgot password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .input('EmailAddress', sql.VarChar, email)
+      .query('SELECT * FROM ContractorAccounts WHERE EmailAddress = @EmailAddress');
+
+    if (result.recordset.length === 0) {
+      return res.status(404).json({ status: 'error', msg: 'Email not found' });
+    }
+
+    const otp = generateOTP();
+    otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+    await sendEmail(email, 'Reset Password OTP', `Your reset OTP is ${otp}`);
+
+    res.json({ status: 'ok', msg: 'Reset OTP sent to your email' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', msg: 'Server error' });
+  }
+});
+
+// Reset password
+router.post('/reset-password', async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  const stored = otpStore.get(email);
+
+  if (!stored || stored.otp !== otp || Date.now() > stored.expiresAt) {
+    return res.status(400).json({ status: 'error', msg: 'Invalid or expired OTP' });
+  }
+
+  try {
+    const hashed = await bcrypt.hash(newPassword, 10);
+    const pool = await poolPromise;
+    await pool.request()
+      .input('EmailAddress', sql.VarChar, email)
+      .input('Password', sql.VarChar, hashed)
+      .query('UPDATE ContractorAccounts SET Password = @Password WHERE EmailAddress = @EmailAddress');
+
+    otpStore.delete(email);
+    res.json({ status: 'ok', msg: 'Password reset successful' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', msg: 'Server error' });
+  }
+});
+
+router.get('/session-info', (req, res) => {
+  if (req.session.container) {
+    res.json({ success: true, data: req.session.container });
+  } else {
+    res.status(401).json({ success: false, message: 'Not logged in' });
   }
 });
 
