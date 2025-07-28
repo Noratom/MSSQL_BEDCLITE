@@ -5,35 +5,38 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const { sql, poolPromise } = require('../db');
 
-// ==== OTP In-Memory Store ====
+// ====== OTP Store ======
 const otpStore = new Map();
 
 function generateOTP(length = 6) {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // e.g., 6-digit
+  return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// === Setup nodemailer transporter ===
+// ====== Send Email via noreply@beninelectric.com ======
 async function sendEmail(to, subject, message) {
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: false, // change to true if using port 465
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, // This is your 16-digit App Password
+        pass: process.env.EMAIL_PASS,
       },
     });
 
     const mailOptions = {
-      from: `"BEDCLite" <${process.env.EMAIL_USER}>`,
+      from: `"BEDC Support" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text: message,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`📧 Email sent to ${to}: ${info.response}`);
+    console.log('✅ Email sent:', info.messageId);
   } catch (error) {
     console.error('❌ Failed to send email:', error.message);
+    throw error; // Ensure it bubbles up if needed
   }
 }
 
