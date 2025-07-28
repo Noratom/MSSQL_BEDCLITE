@@ -2,7 +2,40 @@
 const express = require('express');
 const router = express.Router(); 
 const bcrypt = require('bcryptjs');
-const { sql, poolPromise } = require('../db'); // adjust path to your db config
+const nodemailer = require('nodemailer');
+const { sql, poolPromise } = require('../db');
+
+// ==== OTP In-Memory Store ====
+const otpStore = new Map();
+
+function generateOTP(length = 6) {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // e.g., 6-digit
+}
+
+// === Setup nodemailer transporter ===
+async function sendEmail(to, subject, message) {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, // This is your 16-digit App Password
+      },
+    });
+
+    const mailOptions = {
+      from: `"BEDCLite" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text: message,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Email sent to ${to}: ${info.response}`);
+  } catch (error) {
+    console.error('❌ Failed to send email:', error.message);
+  }
+}
 
 
 // Contractor Signup Route
@@ -201,52 +234,77 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Forgot password
+
+// Forgot Password
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
+
   try {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('EmailAddress', sql.VarChar, email)
       .query('SELECT * FROM ContractorAccounts WHERE EmailAddress = @EmailAddress');
 
-    if (result.recordset.length === 0) {
-      return res.status(404).json({ status: 'error', msg: 'Email not found' });
+    const user = result.recordset[0];
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Email not found' });
     }
 
     const otp = generateOTP();
-    otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
-    await sendEmail(email, 'Reset Password OTP', `Your reset OTP is ${otp}`);
+    otpStore.set(email, otp);
 
-    res.json({ status: 'ok', msg: 'Reset OTP sent to your email' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: 'error', msg: 'Server error' });
+    // Optional: Add expiration
+    setTimeout(() => otpStore.delete(email), 5 * 60 * 1000); // 5 mins
+
+    await sendEmail(email, 'Your OTP Code', `Your OTP is: ${otp}`);
+
+    return res.status(200).json({
+  status: 'ok',
+  msg: 'OTP sent successfully',
+  nextStep: 'verify-otp'
+   });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
 // Reset password
 router.post('/reset-password', async (req, res) => {
   const { email, otp, newPassword } = req.body;
-  const stored = otpStore.get(email);
 
-  if (!stored || stored.otp !== otp || Date.now() > stored.expiresAt) {
-    return res.status(400).json({ status: 'error', msg: 'Invalid or expired OTP' });
+  if (!email || !otp || !newPassword) {
+    return res.status(400).json({ message: 'Missing email, OTP, or password' });
+  }
+
+  const storedOtp = otpStore.get(email);
+  if (!storedOtp || storedOtp !== otp) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' });
   }
 
   try {
-    const hashed = await bcrypt.hash(newPassword, 10);
     const pool = await poolPromise;
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await pool.request()
-      .input('EmailAddress', sql.VarChar, email)
-      .input('Password', sql.VarChar, hashed)
-      .query('UPDATE ContractorAccounts SET Password = @Password WHERE EmailAddress = @EmailAddress');
+      .input('email', sql.VarChar, email)
+      .input('password', sql.VarChar, hashedPassword)
+      .query('UPDATE ContractorAccounts SET Password = @password WHERE EmailAddress = @email');
 
-    otpStore.delete(email);
-    res.json({ status: 'ok', msg: 'Password reset successful' });
+    otpStore.delete(email); // Clear OTP after success
+    return res.status(200).json({ status: 'ok', message: 'Password reset successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: 'error', msg: 'Server error' });
+    console.error('Password reset error:', err.message);
+    return res.status(500).json({ message: 'Server error. Please try again.' });
+  }
+});
+
+
+router.get('/session-info', (req, res) => {
+  if (req.session.container) {
+    res.json({ success: true, data: req.session.container });
+  } else {
+    res.status(401).json({ success: false, message: 'Not logged in' });
   }
 });
 
