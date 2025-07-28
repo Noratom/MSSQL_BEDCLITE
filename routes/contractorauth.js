@@ -16,13 +16,16 @@ function generateOTP(length = 6) {
 async function sendEmail(to, subject, message) {
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT),
-      secure: false, // change to true if using port 465
+      host: 'smtp.office365.com',
+      port: 587,
+      secure: false, // Use TLS
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL_USER,   // e.g., noreply@beninelectric.com
+        pass: process.env.EMAIL_PASS
       },
+      tls: {
+        ciphers: 'SSLv3'
+      }
     });
 
     const mailOptions = {
@@ -36,7 +39,7 @@ async function sendEmail(to, subject, message) {
     console.log('✅ Email sent:', info.messageId);
   } catch (error) {
     console.error('❌ Failed to send email:', error.message);
-    throw error; // Ensure it bubbles up if needed
+    throw error;
   }
 }
 
